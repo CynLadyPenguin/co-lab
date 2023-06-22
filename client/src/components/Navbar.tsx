@@ -31,6 +31,9 @@ const Navbar = () => {
         >
           Logout
         </li>
+        <li className="navbar-item">
+          <Link to="/feed">Feed</Link>
+        </li>
       </ul>
     </nav>
   );
