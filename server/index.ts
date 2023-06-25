@@ -11,6 +11,8 @@ import { v2 as cloudinary } from 'cloudinary';
 dotenv.config({ path: path.resolve(dirname(fileURLToPath(import.meta.url)), '../.env') });
 const { PORT, CLOUD_NAME, CLOUD_API_KEY, CLOUD_SECRET } = process.env;
 import Users from './routes/users.js';
+import Messages from './routes/messages.js';
+import { Message } from './database/index.js';
 import VisualArtwork from './routes/visualartwork.js';
 import CreateStoryRouter from './routes/story.js';
 import pagesRouter from './routes/pages.js';
@@ -43,6 +45,7 @@ app.use(express.json({ limit: '10mb' }));
 // ROUTES
 app.use('/api/rooms', Rooms);
 app.use('/users', Users);
+app.use('/messages', Messages);
 app.use('/visualart', VisualArtwork);
 app.use('/api/stories', CreateStoryRouter);
 app.use('/api/pages', pagesRouter);
@@ -141,8 +144,35 @@ io.on('connection', socket => {
     console.log(`User ${userId} joined the room`);
   });
 
-  socket.on('logJoinUser', (userId) => {
-    console.log(`User ${userId} joined the room`);
+  socket.on('directMessage', async ({ senderId, receiverId, message }) => {
+    const sortedIds = [senderId, receiverId].sort(); // Sort the user IDs
+    const room = `user-${sortedIds[0]}-${sortedIds[1]}`; // Concatenate the sorted IDs
+    try {
+      const newMessage = await Message.create({
+        senderId,
+        receiverId,
+        message,
+      });
+
+      socket.emit('messageSent', newMessage);
+      io.to(room).emit('messageReceived', newMessage);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  socket.on('joinThread', (userId, receiverId) => {
+    const sortedIds = [userId, receiverId].sort();
+    const thread = `user-${sortedIds[0]}-${sortedIds[1]}`;
+    socket.join(thread);
+    console.log(`User ${userId} joined the message thread ${thread}. Recipient is ${receiverId}`);
+  });
+
+  socket.on('disconnectThread', (userId, receiverId) => {
+    const sortedIds = [userId, receiverId].sort();
+    const thread = `user-${sortedIds[0]}-${sortedIds[1]}`;
+    socket.leave(thread);
+    console.log(`${userId} left the message thread`);
   });
 
   socket.on('disconnectUser', userId => {

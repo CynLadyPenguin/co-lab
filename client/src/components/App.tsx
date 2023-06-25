@@ -9,6 +9,7 @@ import StoryBook from './Stories';
 import Ear from './EarStuff/Instrument'
 import Sculpture from './Sculpture'
 import VisualArt from './Eye/VisualArt';
+import Inbox from './Messages/Inbox';
 import Feed from './Feed';
 import '../styles.css';
 
@@ -25,6 +26,7 @@ const App = () => {
         <Route path='/music' element={<Ear />} />
         <Route path='/visualart/:roomId' element={<VisualArt />} />
         <Route path='/sculpture/:roomId' element={<Sculpture />} />
+        <Route path='/messages' element={<Inbox />} />
         <Route path='/feed' element={<Feed />} />
       </Routes>
     </Router>

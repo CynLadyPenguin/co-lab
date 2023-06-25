@@ -7,7 +7,6 @@ import ear from '../assets/images/ear.png';
 import hand from '../assets/images/hand.png';
 import mouth from '../assets/images/mouth.png';
 import { io } from "socket.io-client";
-import '../styles.css';
 
 const Home = () => {
   const { user, isAuthenticated, isLoading } = useAuth0();

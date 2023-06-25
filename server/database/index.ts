@@ -1,7 +1,7 @@
-import { Sequelize, DataTypes } from 'sequelize';
+import { Sequelize, DataTypes, Model } from 'sequelize';
 const { DB_NAME, DB_USER, DB_PW } = process.env;
 
-const sequelize = new Sequelize(DB_NAME || 'colab', DB_USER || 'root', DB_PW || '', {
+const sequelize = new Sequelize(DB_NAME || 'colab', DB_USER as string, DB_PW as string, {
   host: 'localhost',
   dialect: 'postgres',
   define: {
@@ -10,7 +10,17 @@ const sequelize = new Sequelize(DB_NAME || 'colab', DB_USER || 'root', DB_PW || 
   logging: false
 });
 
-const User = sequelize.define('users', {
+interface UserAttributes {
+  id: string;
+  name: string;
+  email: string;
+  friends: Array<string>;
+  picture: string;
+}
+
+interface UserModel extends Model<UserAttributes>, UserAttributes { }
+
+const User = sequelize.define<UserModel>('users', {
   id: {
     type: DataTypes.STRING,
     primaryKey: true,
@@ -23,7 +33,7 @@ const User = sequelize.define('users', {
     type: DataTypes.STRING,
   },
   friends: {
-    type: DataTypes.ARRAY(DataTypes.INTEGER),
+    type: DataTypes.ARRAY(DataTypes.STRING),
   },
   picture: {
     type: DataTypes.STRING,
@@ -34,10 +44,23 @@ const Message = sequelize.define('messages', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
+    autoIncrement: true,
+  },
+  senderId: {
+    type: DataTypes.STRING,
     allowNull: false,
   },
-  text: {
+  receiverId: {
     type: DataTypes.STRING,
+    allowNull: false,
+  },
+  message: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+  timestamp: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
   },
 });
 
@@ -167,8 +190,8 @@ Story.belongsTo(User, { foreignKey: 'originalCreatorId' });
 Sculpture.belongsTo(Artwork, { foreignKey: 'artworkId' });
 UserCollaboration.belongsTo(Collaboration, { foreignKey: 'collaborationId' });
 UserCollaboration.belongsTo(User, { foreignKey: 'userId' });
-Message.belongsTo(User, { foreignKey: 'userId' });
-Message.belongsTo(User, { foreignKey: 'recipientId' });
+Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
 Pages.belongsTo(Story, { foreignKey: 'storyId' })
 
 const initialize = async () => {
@@ -184,6 +207,7 @@ export {
   sequelize,
   initialize,
   User,
+  UserModel,
   Message,
   Artwork,
   VisualArt,

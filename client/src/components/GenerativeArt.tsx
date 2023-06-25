@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import p5 from 'p5';
 import { FaSave } from 'react-icons/fa';
-import '../styles.css';
 
 const GenerativeArt = () => {
   const canvasRef = useRef(null);

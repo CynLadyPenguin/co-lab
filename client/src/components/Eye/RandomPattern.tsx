@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import paper, { Point, Path, Color, Gradient, GradientStop } from 'paper';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPalette } from '@fortawesome/free-solid-svg-icons';
-import '../../styles.css';
 
 interface PatternProps {
   backgroundColor: string,

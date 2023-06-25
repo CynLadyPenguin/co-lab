@@ -1,8 +1,6 @@
 import React from "react";
 import { Outlet, Link } from "react-router-dom";
-import LoginButton from "./LoginButton";
 import { useAuth0 } from "@auth0/auth0-react";
-import '../styles.css';
 
 const Navbar = () => {
   const { logout } = useAuth0();
@@ -24,15 +22,18 @@ const Navbar = () => {
         <li className="navbar-item">
           <Link to="/profile">Profile</Link>
         </li>
+        <li className="navbar-item">
+          <Link to="/feed">Feed</Link>
+        </li>
+        <li className="navbar-item">
+          <Link to="/messages">Messages</Link>
+        </li>
         <li
           className="navbar-item"
           onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
           style={{ cursor: 'pointer' }}
         >
           Logout
-        </li>
-        <li className="navbar-item">
-          <Link to="/feed">Feed</Link>
         </li>
       </ul>
     </nav>
