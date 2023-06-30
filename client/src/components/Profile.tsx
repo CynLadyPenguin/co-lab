@@ -1,38 +1,70 @@
-import React from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAuth0, User } from '@auth0/auth0-react';
 import axios from 'axios';
 import { SendButton } from '../styled';
+import { StyleSheetManager } from 'styled-components';
 
-const Profile = () => {
+const Profile: React.FC = () => {
+  let { userId } = useParams();
   const { user, isAuthenticated, isLoading } = useAuth0();
+  const [profileUser, setProfileUser] = useState<User | undefined>(undefined);
 
-  if (isLoading) {
-    return <div className='loading-container'>Loading ...</div>;
+  useEffect(() => {
+    if (userId) {
+      getUserInfo();
+    } else {
+      setProfileUser(user);
+    }
+  }, [user, userId])
+
+  const getUserInfo = async () => {
+    try {
+      const result = await axios.get(`/users/${userId}`);
+      setProfileUser(result.data);
+    } catch (err) {
+      console.error('Failed to GET user info at client:', err);
+    }
   }
 
-  const addFriend = (id: any) => {
+  const addFriend = (userId: string, friendId: string) => {
     try {
       axios.post('/users/add-friend', {
-        id,
-        friendId: 'google-oauth2|118010226608314597957'
+        userId,
+        friendId
       })
     } catch (err) {
       console.error('Failed to POST new friend at client:', err);
     }
   }
 
+  if (isLoading) {
+    return <div className='loading-container'>Loading ...</div>;
+  }
+
   return (
-    user && isAuthenticated ? (
-      <div className='profile-container'>
-        <img src={user.picture} alt={user.name} />
-        <h2>{user.name}</h2>
-        <p>{user.email}</p>
-        <SendButton style={{ width: '15%', margin: '5px' }} onClick={() => addFriend(user.sub)}>Add Friend</SendButton>
-      </div>
-    ) :
-      (
-        <p>You are not logged in</p>
-      )
+    isAuthenticated ? (
+      <StyleSheetManager shouldForwardProp={(prop) => prop !== 'theme'}>
+        <div className='profile-container'>
+          {profileUser ? (
+            <>
+              <img src={profileUser.picture} alt={profileUser.name} />
+              <h2>{profileUser.name}</h2>
+              <p>{profileUser.email}</p>
+              {userId && (
+                <SendButton style={{ width: '15%', margin: '5px' }} onClick={() => addFriend(user.sub, profileUser.id)}>
+                  Add Friend
+                </SendButton>
+              )}
+            </>
+          ) : (
+            <p>Loading profile...</p>
+          )}
+        </div>
+      </StyleSheetManager >
+    ) : (
+      <p>You are not logged in</p>
+    )
   );
 };
 

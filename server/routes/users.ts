@@ -7,7 +7,17 @@ Users.get('/', async (req, res) => {
     const users = await User.findAll();
     res.status(200).send(users);
   } catch (err) {
-    console.error('Failed to GET all users from db:', err);
+    console.error('Failed to GET all users:', err);
+  }
+})
+
+Users.get('/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findByPk(userId);
+    res.status(200).send(user);
+  } catch (err) {
+    console.error('Failed to GET user BY ID:', err);
   }
 })
 
@@ -26,9 +36,9 @@ Users.post('/', async (req, res) => {
 })
 
 Users.post('/add-friend', async (req, res) => {
-  const { id, friendId } = req.body;
+  const { userId, friendId } = req.body;
   try {
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(userId);
     if (user) {
       const existingFriends = user.friends;
       if (existingFriends.includes(friendId)) {

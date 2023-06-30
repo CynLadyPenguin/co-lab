@@ -1,12 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as hand from 'handtrackjs';
 import { Model } from 'handtrackjs';
-import aChord from '../../../../assests/sfx/a-chord.mp3';
-import bChord from '../../../../assests/sfx/b-chord.mp3';
-import cChord from '../../../../assests/sfx/c-chord.mp3';
-import eChord from '../../../../assests/sfx/e-chord.mp3';
 
-import snare from '../../../../assests/pics/snare.jpeg';
 import './Video.css';
 import RecordRTC from 'recordrtc';
 
@@ -41,21 +36,21 @@ const Instrument = () => {
           if (y > 230) {
             //bottom left
             if (x > 415) {
-              audio.current!.src = aChord;
+              audio.current!.src = 'https://res.cloudinary.com/dtnq6yr17/video/upload/v1688069976/assets/a-chord_zxfqv2.mp3';
               audio.current!.play();
               //bottom right
             } else if (x < 55) {
-              audio.current!.src = cChord;
+              audio.current!.src = 'https://res.cloudinary.com/dtnq6yr17/video/upload/v1688069977/assets/c-chord_c1wnjv.mp3';
               audio.current!.play();
             }
           } else if (y < 98) {
             //top left
             if (x > 400) {
-              audio.current!.src = bChord;
+              audio.current!.src = 'https://res.cloudinary.com/dtnq6yr17/video/upload/v1688069977/assets/b-chord_alydx3.mp3';
               audio.current!.play();
               //top right
             } else if (x < 55) {
-              audio.current!.src = eChord;
+              audio.current!.src = 'https://res.cloudinary.com/dtnq6yr17/video/upload/v1688069977/assets/e-chord_schvpp.mp3';
               audio.current!.play();
             }
           }
@@ -156,7 +151,7 @@ const Instrument = () => {
         <div className="overlay-eChord-text">E Chord</div>
       </div>
       <audio id="audio" ref={audio}>
-        <source src={aChord} type="audio/mpeg" />
+        <source src='https://res.cloudinary.com/dtnq6yr17/video/upload/v1688069976/assets/a-chord_zxfqv2.mp3' type="audio/mpeg" />
       </audio>
     </div>
   );

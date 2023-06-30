@@ -1,4 +1,4 @@
-declare module '*.png' {
+declare module '*.ico' {
   const value: any;
   export = value;
 }

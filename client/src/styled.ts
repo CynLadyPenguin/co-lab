@@ -40,26 +40,43 @@ const RecipientBubble = styled.div`
   font-size: 20px;
 `;
 
+const TextInputContainer = styled.div`
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+`;
+
 const TextInput = styled.input`
   height: 40px;
   width: 100%;
   padding: 5px 10px;
-  margin-right: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 20px;
 `;
 
+const STTButton = styled.button`
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: gray;
+  padding: 5px;
+  background-color: transparent;
+  border: none;
+`;
+
 const SendMessageContainer = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-top: 10px;
 `;
 
 const SendButton = styled.button`
   background-color: #F06b80;
   color: #ffffff;
+  margin-left: 10px;
   border: 2px solid white;
   border-radius: 20px;
   padding: 10px 20px;
@@ -73,6 +90,8 @@ export {
   SenderBubble,
   RecipientBubble,
   TextInput,
+  TextInputContainer,
+  STTButton,
   SendMessageContainer,
   SendButton
 };

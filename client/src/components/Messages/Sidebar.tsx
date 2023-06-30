@@ -5,6 +5,7 @@ import { Socket } from 'socket.io-client';
 import { SocketContext } from './Inbox';
 import Thread from './Thread';
 import styled from 'styled-components';
+import { FaCogs } from 'react-icons/fa';
 
 const SidebarContainer = styled.div`
   display: flex;
@@ -28,6 +29,17 @@ const ThreadContainer = styled.div`
   padding: 20px;
   max-height: 100%;
   overflow-y: auto;
+`;
+
+const ConfigButton = styled.button`
+  color: white;
+  font-size: 2.5rem;
+  position: fixed;
+  right: 125px;
+  top: 655px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
 `;
 
 const Sidebar = () => {
@@ -74,6 +86,9 @@ const Sidebar = () => {
             }
           })}
         </ul>
+        <ConfigButton>
+          <FaCogs />
+        </ConfigButton>
       </MessageList>
       <ThreadContainer>
         <Thread userId={userId} receiverId={recipient} userList={userList} setUserList={setUserList} />

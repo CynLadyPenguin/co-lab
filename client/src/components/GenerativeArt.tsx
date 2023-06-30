@@ -1,10 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import { useAuth0 } from "@auth0/auth0-react";
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import axios from 'axios';
+import { Socket } from 'socket.io-client';
+import { SocketContext } from './Sculpture';
 import p5 from 'p5';
 import { FaSave } from 'react-icons/fa';
 
-const GenerativeArt = () => {
+const GenerativeArt = ( {roomId} ) => {
+  const { user, isAuthenticated, isLoading } = useAuth0();
   const canvasRef = useRef(null);
-
+  const socket = useContext(SocketContext) as Socket;
   useEffect(() => {
     // Create p5 sketch
     const sketch = (p) => {
@@ -22,15 +27,33 @@ const GenerativeArt = () => {
         p.background(61, 57, 131); // Set background color to #3d3983
         current = p.createVector(0, 0, 0);
         previous = p.createVector(0, 0, 0);
+        socket.on('drawing', data => {
+          if (p.canvas) {
+            if (data.painting) {
+              current.x = data.x - p.width / 2
+              current.y = data.y - p.height / 2
+              // current.z = p.random(-100, 100)
+              let force = p5.Vector.sub(current, previous);
+              force.mult(0.05);
+
+              paths.at(-1).add(current, force);
+
+              next = p.millis() + p.random(100);
+
+              previous.x = current.x;
+              previous.y = current.y;
+              // previous.z = current.z;
+            }
+          }
+        });
       };
 
       p.draw = () => {
         p.background(61, 57, 131); // Set background color to #3d3983
-
         if (p.millis() > next && painting) {
           current.x = p.mouseX - p.width / 2;
           current.y = p.mouseY - p.height / 2;
-          current.z = p.random(-100, 100);
+          // current.z = p.random(-100, 100);
 
           let force = p5.Vector.sub(current, previous);
           force.mult(0.05);
@@ -41,11 +64,19 @@ const GenerativeArt = () => {
 
           previous.x = current.x;
           previous.y = current.y;
-          previous.z = current.z;
+          // previous.z = current.z;
+
+          socket.emit('drawing', {
+            x: p.mouseX,
+            y: p.mouseY,
+            // z: p.mouseZ,
+            painting,
+            roomId
+          })
         }
 
-        p.orbitControl();
-        p.translate(0, 0, -p.width / 2);
+        // p.orbitControl();
+        // p.translate(0, 0, -p.width / 2);
 
         for (let i = 0; i < paths.length; i++) {
           paths[i].update();
@@ -58,7 +89,7 @@ const GenerativeArt = () => {
         painting = true;
         previous.x = p.mouseX - p.width / 2;
         previous.y = p.mouseY - p.height / 2;
-        previous.z = p.random(-100, 100);
+        // previous.z = p.random(-100, 100);
         paths.push(new Path());
       };
 
@@ -120,27 +151,35 @@ const GenerativeArt = () => {
             p.line(
               this.position.x,
               this.position.y,
-              this.position.z,
+              // this.position.z,
               other.position.x,
               other.position.y,
-              other.position.z
+              // other.position.z
             );
           }
         }
       }
     };
-
     // Create new p5 instance
     new p5(sketch);
-  }, []);
 
-  const handleSave = () => {
+    return () => {
+      socket.disconnect();
+    }
+
+  }, [roomId]);
+
+  const handleSave = async () => {
     const canvas = canvasRef.current.querySelector('canvas');
-    if (canvas) {
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL();
-      link.download = 'generative_art.png';
-      link.click();
+    try {
+      if (canvas && user) {
+        await axios.post('/sculpture', { canvas: canvas.toDataURL(), userId: user?.sub });
+        // const link = document.createElement('a');
+        // link.download = 'generative_art.png';
+        // link.click();
+      }
+    } catch (err) {
+      console.error('Unable to POST artwork to DB at client', err);
     }
   };
 

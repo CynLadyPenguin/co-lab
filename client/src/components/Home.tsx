@@ -2,10 +2,6 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
-import eye from '../assets/images/eye.png';
-import ear from '../assets/images/ear.png';
-import hand from '../assets/images/hand.png';
-import mouth from '../assets/images/mouth.png';
 import { io } from "socket.io-client";
 
 const Home = () => {
@@ -17,10 +13,9 @@ const Home = () => {
   const generateRoomId = async (endpoint: any) => {
     try {
       if (user) {
-        const response = await axios.post('/api/rooms', { userId: user.sub });
+        const response = await axios.post('/api/rooms', { userId: user.nickname });
         const { userId, roomId } = response.data;
         setRoomId(roomId);
-        socket.emit('createRoom', userId, roomId);
         navigate(`/${endpoint}/${roomId}`);
       }
     } catch (err) {
@@ -66,24 +61,24 @@ const Home = () => {
         onClick={() => generateRoomId('visualart')}
         style={{ cursor: 'pointer' }}
       >
-        <img src={eye} alt="eye" />
+        <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/eye_lqlnt5.png' alt="eye" />
       </div>
       <Link to='/music' className='image-link'>
-        <img src={ear} alt="ear" />
+        <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069621/assets/ear_aco7ax.png' alt="ear" />
       </Link>
       <div
         className='image-link'
         onClick={() => generateRoomId('sculpture')}
         style={{ cursor: 'pointer' }}
       >
-        <img src={hand} alt="hand" />
+        <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/hand_z5epqn.png' alt="hand" />
       </div>
-      <Link to='/story' className='image-link'>
+      <Link to='/stories' className='image-link'>
         <div
           className='image-link'
           onClick={() => generateRoomId('stories')}
           style={{ cursor: 'pointer' }}>
-          <img src={mouth} alt="mouth" />
+          <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/mouth_lbo1al.png' alt="mouth" />
         </div>
       </Link>
     </div>

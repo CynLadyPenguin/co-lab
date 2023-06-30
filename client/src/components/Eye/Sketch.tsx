@@ -108,8 +108,9 @@ const Draw: React.FC<DrawProps> = ({ backgroundColor, handleBackgroundColorChang
   }, []);
 
   const saveArt = async (art: string) => {
+    const userId = user?.sub;
     try {
-      await axios.post('/visualart', { art, user });
+      await axios.post('/visualart', { art, userId });
     } catch (err) {
       console.error('Failed to SAVE art to db at client:', err);
     }

@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
+import TTS from '../TTS';
+import STT from '../STT';
+import TooltipIcon from '../TooltipIcons';
+import { FaVolumeUp } from 'react-icons/fa';
 import { Socket } from 'socket.io-client';
 import { SocketContext } from './Inbox';
 import {
@@ -8,6 +12,8 @@ import {
   SenderBubble,
   RecipientBubble,
   TextInput,
+  TextInputContainer,
+  STTButton,
   SendMessageContainer,
   SendButton
 } from '../../styled';
@@ -54,6 +60,20 @@ const Thread = ({ userId, receiverId, userList, setUserList }) => {
     setMessage('');
   };
 
+  const updateContentWithTranscript = (transcript: string) => {
+    setMessage((prevMessage) => prevMessage + ' ' + transcript);
+  };
+
+  const handleSpeakClick = (msg: string) => {
+    if (msg) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(msg);
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error('Speech synthesis is not supported in this browser.');
+    }
+  };
+
   useEffect(() => {
     socket.on('messageReceived', (newMessage) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -94,21 +114,33 @@ const Thread = ({ userId, receiverId, userList, setUserList }) => {
               ) : (
                 <RecipientBubble>{msg.message}</RecipientBubble>
               )}
+              <TooltipIcon
+                icon={FaVolumeUp}
+                tooltipText="TTY"
+                handleClick={() => { handleSpeakClick(msg.message) }}
+                style={{ top: '15px' }}
+              />
             </BubbleContainer>
           </div>
         ))}
       </ConversationContainer>
-      {receiverId ?
-        <SendMessageContainer>
-          <TextInput
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-          <SendButton type="submit" onClick={sendMessage}>Send</SendButton>
-        </SendMessageContainer>
-        : null
-      }
+      {receiverId ? (
+        <>
+          <SendMessageContainer>
+            <TextInputContainer>
+              <TextInput
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+              <STTButton>
+                <STT updateTranscript={updateContentWithTranscript} />
+              </STTButton>
+            </TextInputContainer>
+            <SendButton type="submit" onClick={sendMessage}>Send</SendButton>
+          </SendMessageContainer>
+        </>
+      ) : null}
     </>
   );
 };

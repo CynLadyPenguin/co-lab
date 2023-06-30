@@ -4,13 +4,12 @@ import { VisualArt, Artwork } from '../database/index.js';
 import { v2 as cloudinary } from 'cloudinary';
 
 VisualArtwork.post('/', async (req, res) => {
-  const { art, user } = req.body;
+  const { art, userId } = req.body;
   try {
-    const cloudURL = (await uploadDataUrlToCloudinary(art)).secure_url;
-    const artwork = await Artwork.create({ type: 'visual art' });
+    const cloudURL = (await uploadDataUrlToCloudinary(art));
+    const artwork = await Artwork.create({ type: 'visual art', userId });
     const { id: artworkId } = artwork.dataValues;
-    const newArt = await VisualArt.create({ artworkId, content: cloudURL });
-    console.log('new art', newArt);
+    await VisualArt.create({ artworkId, content: cloudURL });
     res.sendStatus(201);
   } catch (err) {
     console.error('Failed to SAVE visual art to db:', err);
@@ -21,8 +20,6 @@ VisualArtwork.post('/', async (req, res) => {
 VisualArtwork.get('/', async (req, res) => {
   try {
     const art = await VisualArt.findAll();
-    console.log('Retrieved art:', art);
-
     res.json(art);
   } catch (err) {
     console.error('Failed to get art:', err);
@@ -30,11 +27,10 @@ VisualArtwork.get('/', async (req, res) => {
   }
 });
 
-
 const uploadDataUrlToCloudinary = async (dataUrl: string) => {
   try {
     const result = await cloudinary.uploader.upload(dataUrl);
-    return result;
+    return result.secure_url;
   } catch (err) {
     console.error('Failed to upload visual art to Cloudinary:', err);
     throw err;
