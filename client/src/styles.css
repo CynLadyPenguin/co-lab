@@ -22,6 +22,12 @@ html {
   background-color: #3d3983;
 }
 
+#logo {
+  width: 300px;
+  cursor: pointer;
+  margin-top: 3px;
+}
+
 .body-container {
   background-color: #3d3983;
   display: flex;
@@ -45,9 +51,7 @@ html {
   display: flex;
   flex-direction: column;
   width: 80vw;
-  /* Adjust the width as desired */
   margin: 0 auto;
-  /* Center the container horizontally */
   height: 60vh;
 }
 
@@ -88,24 +92,18 @@ html {
   display: flex;
   width: 80vw;
   margin: 0 auto;
-  /* Center the container horizontally */
 }
 
 .navbar {
-  font-size: 24px;
-  background-color: #f06b80;
-  height: 4rem;
-  /* Adjust the height as desired */
+  font-size: 36px;
+  background-color: #3d3983;
   display: flex;
   align-items: center;
   width: 80vw;
-  /* Adjust the width as desired */
   margin: 0 auto;
-  /* Center the navbar horizontally */
   margin-top: 25px;
   padding: 20px;
   border-radius: 10px;
-  /* margin-bottom: 100px; */
 }
 
 .navbar-links {
@@ -122,11 +120,32 @@ html {
   margin-right: 10px;
 }
 
+.navbar-links-right {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  margin-left: auto;
+}
+
+.navbar-item-right {
+  margin-right: 10px;
+  margin-left: 25px;
+}
+
 .navbar-item:last-child {
   margin-right: 0;
 }
 
 .navbar-item>a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.navbar-item-right>a {
   color: #fff;
   text-decoration: none;
 }
@@ -159,7 +178,7 @@ html {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
-  
+
 }
 
 .user-pfp {
@@ -183,7 +202,7 @@ html {
 .cloud-img {
   width: 100%;
   height: auto;
-  
+
 }
 
 .page {
@@ -285,7 +304,7 @@ html {
 }
 
 /* show the tooltip text when hovering */
-div:hover > .tooltip-text {
+div:hover>.tooltip-text {
   display: block;
 }
 

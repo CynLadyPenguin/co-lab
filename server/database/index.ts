@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes, Model } from 'sequelize';
 const { DB_NAME, DB_USER, DB_PW } = process.env;
+import createSeedData from '../seeds/storySeeds.js';
 
 const sequelize = new Sequelize(DB_NAME || 'colab', DB_USER as string, DB_PW as string, {
   host: 'localhost',
@@ -98,13 +99,15 @@ const Music = sequelize.define('music', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
+    autoIncrement: true,
     allowNull: false,
   },
-  title: {
+  songTitle: {
     type: DataTypes.STRING,
   },
   content: {
     type: DataTypes.TEXT,
+    allowNull: true
   },
   url: {
     type: DataTypes.TEXT,
@@ -185,6 +188,10 @@ const UserCollaboration = sequelize.define('usercollaborations', {
 });
 
 Artwork.belongsTo(User, { foreignKey: 'userId' });
+Artwork.hasOne(VisualArt, { foreignKey: 'artworkId' });
+Artwork.hasOne(Sculpture, { foreignKey: 'artworkId' });
+Artwork.hasOne(Music, { foreignKey: 'artworkId' });
+Artwork.hasOne(Story, { foreignKey: 'artworkId' });
 VisualArt.belongsTo(Artwork, { foreignKey: 'artworkId' });
 Music.belongsTo(Artwork, { foreignKey: 'artworkId' });
 Story.belongsTo(Artwork, { foreignKey: 'artworkId' });
@@ -198,6 +205,10 @@ Pages.belongsTo(Story, { foreignKey: 'storyId' })
 
 const initialize = async () => {
   try {
+    const seedStories = await Story.findAll();
+    if (seedStories.length === 0) {
+      await createSeedData();
+    }
     await sequelize.sync({ alter: true });
     console.log('Tables successfully created!');
   } catch (error) {

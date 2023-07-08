@@ -6,6 +6,22 @@ const ConversationContainer = styled.div`
   flex-grow: 1;
   overflow-y: auto;
   height: 100%;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  
+  /* For WebKit browsers (ex. Chrome) */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+  }
 `;
 
 const BubbleContainer = styled.div`

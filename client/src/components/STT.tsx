@@ -12,7 +12,6 @@ const STT: React.FC<STTProps> = ({ updateTranscript }) => {
 
   //functionality to start the web speech api listening
   const startListening = () => {
-    console.log('button was clicked. working');
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
@@ -25,7 +24,6 @@ const STT: React.FC<STTProps> = ({ updateTranscript }) => {
           //only want the final result for the transcript
           if (result.isFinal) {
               const transcript = result[0].transcript;
-              console.log('Final transcript:', transcript);
               updateTranscript(transcript);
           }
       }

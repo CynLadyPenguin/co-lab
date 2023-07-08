@@ -1,18 +1,25 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext, useRef, createContext, useEffect } from "react";
 import HTMLFlipBook from "react-pageflip";
 import STT from './STT';
 import '../styles.css';
-import { FaSave, FaTimesCircle, FaPlusCircle, FaVolumeUp } from 'react-icons/fa';
+import { FaSave, FaTimesCircle, FaPlusCircle, FaVolumeUp, FaEraser, FaArrowRight } from 'react-icons/fa';
 import TooltipIcon from './TooltipIcons';
 import { TTSToggleContext } from './Stories';
 import Switch from "react-switch";
 import axios from "axios";
 import { GrammarlyEditorPlugin } from "@grammarly/editor-sdk-react";
 import styled from 'styled-components';
+import { useParams } from 'react-router-dom'
+import Peer, { MediaConnection } from 'peerjs';
+import { io, Socket } from 'socket.io-client';
+import {v4 as generatePeerId} from 'uuid';
+export const socket = io('/');
+export const SocketContext = createContext<Socket | null>(null)
 
-const TitlePage: any = styled.div<{ backgroundImage: string }>`
+const peers = {};
+
+const TitlePage: any = styled.div`
   data-density: hard;
-  background-image: url(${props => props.backgroundImage});
   background-size: cover;
   background-position: center;
   height: 90%;
@@ -61,17 +68,35 @@ interface PageEditorProps {
   onSave: (content: string) => void;
   onCancel: () => void;
   TooltipIcon: typeof TooltipIcon;
+  roomId: string | undefined;
 }
 
 //PageEditor component
-const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, TooltipIcon }) => {
+const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, TooltipIcon, roomId }) => {
   const [content, setContent] = useState(page.content);
 
   const { ttsOn } = useContext(TTSToggleContext);
+  // const { id: roomId } = useParams<{ id: string }>();
 
   const handleContentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(event.target.value);
+    if(socket) {
+      socket.emit('typing', {roomId, content: event.target.value});
+    }
   };
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('typing', content => {
+        setContent(content);
+      });
+
+      return () => {
+        //cleanup from typing
+        socket.off('typing');
+      };
+    }
+  }, [content]);
 
   const handleSave = () => {
     onSave(content);
@@ -95,6 +120,10 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, Tooltip
     } else {
       console.error('Speech synthesis is not supported in this browser.');
     }
+  };
+
+  const handleClearContent = () => {
+    setContent('');
   };
 
 
@@ -136,6 +165,12 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, Tooltip
           handleClick={ handleSave }
           style={{ top: '15px'}}
         />
+          <TooltipIcon
+            icon={ FaEraser }
+            tooltipText="Clear"
+            handleClick={ handleClearContent }
+            style={{ top: '15px'}}
+          />
         <TooltipIcon
           icon={ FaVolumeUp }
           tooltipText="TTY"
@@ -157,11 +192,13 @@ interface FlipBookProps {
   fetchPages: () => void;
   addNewPage: () => void;
   TooltipIcon: typeof TooltipIcon;
+  roomId: string | undefined;
 }
 
-const FlipBook: React.FC<FlipBookProps> = ({ story, selectedStoryPages, onUpdatePage, fetchPages, addNewPage, TooltipIcon }) => {
+const FlipBook: React.FC<FlipBookProps> = ({ story, selectedStoryPages, onUpdatePage, fetchPages, addNewPage, TooltipIcon, roomId }) => {
   const [selectedPage, setSelectedPage] = useState<Page | null>(null);
   const [isAutoReading, setIsAutoReading] = useState(false);
+
 
   const flipBookRef = useRef<any>(null);
 
@@ -223,6 +260,7 @@ const FlipBook: React.FC<FlipBookProps> = ({ story, selectedStoryPages, onUpdate
       console.error('Cannot read the page');
     }
   };
+
 
   // const handleToggleAutoRead = () => {
   //   setIsAutoReading(!isAutoReading);
@@ -292,7 +330,15 @@ const FlipBook: React.FC<FlipBookProps> = ({ story, selectedStoryPages, onUpdate
         marginTop: '100px',
       }}
     >
-      <TitlePage backgroundImage={ story.coverImage }>
+    <TitlePage>
+      <div
+        style={{
+          backgroundImage: `url(${story.coverImage})`,
+          height: '700px', width: '500px',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+        }}>
       <div style={{
           backgroundColor: '#fbf5df',
           height: '30px',
@@ -307,9 +353,34 @@ const FlipBook: React.FC<FlipBookProps> = ({ story, selectedStoryPages, onUpdate
           textAlign: 'center',
           margin: 'auto',
         }}>
-          { story.title }
-        </div>
-      </TitlePage>
+        { story.title }
+      </div>
+      <div style={{
+        position: 'absolute',
+        left: '50%',
+        transform: 'translate(-50%, 0)',
+        bottom: '10px'
+      }}>
+      <TooltipIcon
+        icon={ FaPlusCircle }
+        tooltipText="Add New Page"
+        handleClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          addNewPage();
+        }}
+        style={{
+          position: 'absolute',
+          color: '#3d3983',
+          backgroundColor: 'white',
+          borderRadius: '50%',
+          padding: '5px',
+          paddingBottom: '2px',
+          margin: '5px'
+        }}
+      />
+      </div>
+      </div>
+    </TitlePage>
       {selectedStoryPages.map((page, index) => (
         <div key={index}>
         <PageContainer
@@ -371,6 +442,7 @@ const FlipBook: React.FC<FlipBookProps> = ({ story, selectedStoryPages, onUpdate
           onSave={ handleSavePage }
           onCancel={ handleCancelEdit }
           TooltipIcon={ TooltipIcon }
+          roomId={ roomId }
         />
       )}
       </div>

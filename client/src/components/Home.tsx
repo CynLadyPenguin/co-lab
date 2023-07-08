@@ -6,6 +6,7 @@ import { io } from "socket.io-client";
 
 const Home = () => {
   const { user, isAuthenticated, isLoading } = useAuth0();
+  const picture = 'https://res.cloudinary.com/dtnq6yr17/image/upload/v1688591605/default_img3.2_jchs6i.png';
   const navigate = useNavigate();
   const [roomId, setRoomId] = useState('');
   const socket = io('/');
@@ -26,7 +27,7 @@ const Home = () => {
   const saveUser = async () => {
     try {
       if (user) {
-        const { sub: id, name, email, picture } = user;
+        const { sub: id, name, email } = user;
         await axios.post('/users', {
           id,
           name,
@@ -42,7 +43,6 @@ const Home = () => {
   const getUserInfo = async () => {
     try {
       if (user) {
-        console.log(user);
         await saveUser();
       }
     } catch (err) {
@@ -73,14 +73,12 @@ const Home = () => {
       >
         <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/hand_z5epqn.png' alt="hand" />
       </div>
-      <Link to='/stories' className='image-link'>
         <div
           className='image-link'
           onClick={() => generateRoomId('stories')}
           style={{ cursor: 'pointer' }}>
           <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/mouth_lbo1al.png' alt="mouth" />
         </div>
-      </Link>
     </div>
   );
 }

@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { SocketContext } from './VisualArt';
+import { Socket } from 'socket.io-client';
 import axios from 'axios';
 import paper, { Color } from 'paper';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,10 +10,12 @@ import { faPen, faPenFancy, faPalette, faEraser, faFloppyDisk } from '@fortaweso
 interface DrawProps {
   backgroundColor: string;
   handleBackgroundColorChange: (color: string) => void;
+  roomId: string | undefined;
 }
 
-const Draw: React.FC<DrawProps> = ({ backgroundColor, handleBackgroundColorChange }) => {
+const Draw: React.FC<DrawProps> = ({ backgroundColor, handleBackgroundColorChange, roomId }) => {
   const { user } = useAuth0();
+  const socket = useContext(SocketContext) as Socket;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pathRef = useRef<paper.Path | null>(null);
   const penColorRef = useRef<Color>(new Color('white'));
@@ -30,13 +34,6 @@ const Draw: React.FC<DrawProps> = ({ backgroundColor, handleBackgroundColorChang
       pathRef.current.strokeColor = penColorRef.current;
       paper.view.update();
     }
-  };
-
-  const handlePenWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    const width = Number(value);
-    setPenWidth(width);
-    penWidthRef.current = width;
   };
 
   const handlePenWidthButtonClick = () => {
@@ -82,30 +79,52 @@ const Draw: React.FC<DrawProps> = ({ backgroundColor, handleBackgroundColorChang
       path.strokeJoin = 'round';
       path.add(event.point);
       pathRef.current = path;
+      socket.emit('startDrawing', { x: event.point.x, y: event.point.y, roomId });
     };
+
+    socket.on('startDrawing', (data) => {
+      const path = new paper.Path();
+      path.strokeColor = penColorRef.current;
+      path.strokeWidth = penWidthRef.current;
+      path.strokeCap = 'smooth';
+      path.strokeJoin = 'round';
+      path.add(new paper.Point(data.x, data.y));
+      pathRef.current = path;
+    });
 
     tool.onMouseDrag = (event: paper.ToolEvent) => {
-      if (pathRef.current) {
-        pathRef.current.add(event.point);
-      }
+      if (!pathRef.current) return;
+
+      pathRef.current.add(event.point);
+      socket.emit('draw', { x: event.point.x, y: event.point.y, roomId });
     };
+
+    socket.on('draw', (data) => {
+      if (!pathRef.current) return;
+
+      pathRef.current.add(new paper.Point(data.x, data.y));
+    });
 
     tool.onMouseUp = () => {
+      if (!pathRef.current) return;
+
+      pathRef.current.simplify(10);
       pathRef.current = null;
+      socket.emit('endDrawing', { roomId });
     };
 
-    const resizeCanvas = () => {
-      paper.view.viewSize = new paper.Size(canvas.clientWidth, canvas.clientHeight);
-    };
+    socket.on('endDrawing', () => {
+      if (!pathRef.current) return;
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+      pathRef.current.simplify(10);
+      pathRef.current = null;
+    });
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
       tool.remove();
+      paper.project.clear();
     };
-  }, []);
+  }, [socket, roomId]);
 
   const saveArt = async (art: string) => {
     const userId = user?.sub;
@@ -300,8 +319,6 @@ const Draw: React.FC<DrawProps> = ({ backgroundColor, handleBackgroundColorChang
       </div>
     </div>
   );
-
-
 };
 
 export default Draw;

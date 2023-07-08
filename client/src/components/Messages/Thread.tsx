@@ -6,6 +6,8 @@ import TooltipIcon from '../TooltipIcons';
 import { FaVolumeUp } from 'react-icons/fa';
 import { Socket } from 'socket.io-client';
 import { SocketContext } from './Inbox';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane } from '@fortawesome/free-regular-svg-icons';
 import {
   ConversationContainer,
   BubbleContainer,
@@ -39,7 +41,6 @@ const Thread = ({ userId, receiverId, userList, setUserList }) => {
     try {
       const response = await axios.get(`/messages/${userId}/${receiverId}`);
       const newMessages = response.data;
-      console.log(newMessages);
       setMessages(newMessages);
     } catch (err) {
       console.error('Failed to GET messages:', err);
@@ -58,6 +59,12 @@ const Thread = ({ userId, receiverId, userList, setUserList }) => {
     });
 
     setMessage('');
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      sendMessage(e);
+    }
   };
 
   const updateContentWithTranscript = (transcript: string) => {
@@ -132,12 +139,15 @@ const Thread = ({ userId, receiverId, userList, setUserList }) => {
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
               />
               <STTButton>
                 <STT updateTranscript={updateContentWithTranscript} />
               </STTButton>
             </TextInputContainer>
-            <SendButton type="submit" onClick={sendMessage}>Send</SendButton>
+            <SendButton type="submit" onClick={sendMessage}>
+              <FontAwesomeIcon icon={faPaperPlane} size='lg' />
+            </SendButton>
           </SendMessageContainer>
         </>
       ) : null}

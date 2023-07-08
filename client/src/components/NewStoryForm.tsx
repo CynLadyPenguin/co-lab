@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import TTS from './TTS';
 import '../styles.css';
 import axios from 'axios';
+import { useAuth0 } from '@auth0/auth0-react';
 
 interface Page {
   id?: number;
@@ -15,6 +16,7 @@ interface Story {
   title: string;
   coverImage: string | null;
   numberOfPages: number | null;
+  originalCreatorId?: string;
 }
 
 interface NewStoryFormProps {
@@ -29,6 +31,7 @@ const NewStoryForm: React.FC<{ onCreateStory: (story: Story) => void, onCancel: 
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [numberOfPages, setNumberOfPages] = useState<number | null>(null);
   const [speakText, setSpeakText] = useState('');
+  const { user } = useAuth0();
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
@@ -56,13 +59,21 @@ const NewStoryForm: React.FC<{ onCreateStory: (story: Story) => void, onCancel: 
 
 
 
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    //if user is undefined, don't let them make story
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
 
     const story: Story = {
       title,
       coverImage: coverImageUrl,
-      numberOfPages
+      numberOfPages,
+      originalCreatorId: user?.sub
     };
 
     try {
@@ -75,10 +86,8 @@ const NewStoryForm: React.FC<{ onCreateStory: (story: Story) => void, onCancel: 
       });
 
       const data = await response.json();
-      console.log(data);
       if (response.ok) {
         console.log('Story created successfully-client');
-        //trying to grab the story id
         onCreateStory(data);
       } else {
         console.error('Story not created-client');

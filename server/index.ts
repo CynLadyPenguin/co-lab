@@ -12,14 +12,15 @@ dotenv.config({ path: path.resolve(dirname(fileURLToPath(import.meta.url)), '../
 const { PORT, CLOUD_NAME, CLOUD_API_KEY, CLOUD_SECRET, RapidAPI_KEY, RapidAPI_HOST } = process.env;
 import Users from './routes/users.js';
 import Messages from './routes/messages.js';
-import { Message } from './database/index.js';
+import { Artwork, Message } from './database/index.js';
 import artworkRouter from './routes/artwork.js';
 import VisualArtwork from './routes/visualartwork.js';
 import sculptureRouter from './routes/sculpture.js';
 import CreateStoryRouter from './routes/story.js';
 import pagesRouter from './routes/pages.js';
+import Ear from './routes/ear.js'
 import axios from 'axios';
-import multer from 'multer';
+
 
 
 cloudinary.config({
@@ -57,6 +58,7 @@ app.use('/api/stories', CreateStoryRouter);
 app.use('/api/pages', pagesRouter);
 app.use('/sculpture', sculptureRouter);
 
+app.use('/music', Ear)
 app.use(express.static(staticFilesPath));
 
 app.get('*', (req, res) => {
@@ -81,7 +83,11 @@ app.get('/api/stories', async (req, res) => {
 app.post('/api/stories', async (req, res) => {
   try {
     const newStoryData = req.body;
-    const newStory = await Story.create(newStoryData);
+    const { originalCreatorId: userId } = req.body;
+    const artwork = await Artwork.create({ type: 'story', userId });
+    const { id: artworkId } = artwork.dataValues;
+    const newStory = await Story.create({ artworkId, ...newStoryData });
+    console.log(newStory);
     res.status(201).json(newStory);
   } catch (error) {
     console.error(error);
@@ -89,6 +95,32 @@ app.post('/api/stories', async (req, res) => {
   }
 });
 
+app.post('/api/grammar', async (req, res) => {
+  const { text } = req.body;
+
+  const encodedParams = new URLSearchParams({
+    text: text,
+  });
+
+  const options = {
+    method: 'POST',
+    url: 'https://api.textgears.com/check.php',
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded',
+      'X-RapidAPI-Key': RapidAPI_KEY,
+      'X-RapidAPI-Host': RapidAPI_HOST,
+    },
+    data: encodedParams,
+  };
+
+  try {
+    const response = await axios.request(options);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error: Could not check grammar');
+  }
+});
 
 sequelize.authenticate()
   .then(() => console.info('Connected to the database'))
@@ -116,7 +148,7 @@ io.on('connection', socket => {
     socket.join(roomId); // Join the room with the provided ID
     socket.to(roomId).emit('userJoined', userId); // Emit the userJoined event to the participants in the room
     console.log(`User ${userId} joined the room`);
-    
+
     socket.on('disconnect', () => {
       socket.to(roomId).emit('disconnectUser', userId)
       console.log(`${userId} left the room`);
@@ -155,17 +187,35 @@ io.on('connection', socket => {
   });
 
 
-    // // Handle key press event
-    // socket.on('keyPress', (key: string, roomId: string) => {
-    //   // Broadcast the key press to all participants in the same room
-    //   socket.to(roomId).emit('keyPress', key);
-    // });
+  // // Handle key press event
+  // socket.on('keyPress', (key: string, roomId: string) => {
+  //   // Broadcast the key press to all participants in the same room
+  //   socket.to(roomId).emit('keyPress', key);
+  // });
 
-    socket.on('drawing', data => {
-      socket.to(data.roomId).emit('drawing', data);
-    })
+  socket.on('drawing', (data: any) => {
+    socket.to(data.roomId).emit('drawing', data);
+  })
+
+  //for the storybook page editor text area
+  socket.on('typing', ({ roomId, content }) => {
+    socket.to(roomId).emit('typing', content);
+  });
+
+  socket.on('startDrawing', (data) => {
+    socket.to(data.roomId).emit('startDrawing', data);
+  });
+
+  socket.on('draw', (data) => {
+    socket.to(data.roomId).emit('draw', data);
+  });
+
+  socket.on('endDrawing', (data) => {
+    socket.to(data.roomId).emit('endDrawing');
+  });
 });
 
 server.listen(PORT, () => {
   console.log(`Server listening on http://127.0.0.1:${PORT}`);
+  console.log(process.env.DB_USER, process.env.DB_PW);
 });

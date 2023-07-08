@@ -5,7 +5,7 @@ import { Socket } from 'socket.io-client';
 import { SocketContext } from './Inbox';
 import Thread from './Thread';
 import styled from 'styled-components';
-import { FaCogs } from 'react-icons/fa';
+// import { FaCogs } from 'react-icons/fa';
 
 const SidebarContainer = styled.div`
   display: flex;
@@ -39,6 +39,10 @@ const ConfigButton = styled.button`
   top: 655px;
   background-color: transparent;
   border: none;
+  cursor: pointer;
+`;
+
+const ClickableName = styled.li`
   cursor: pointer;
 `;
 
@@ -80,15 +84,12 @@ const Sidebar = () => {
         <ul>
           {userList.map((user) => {
             if (user.id !== userId) {
-              return (<li key={user.id} onClick={() => handleRecipientClick(user.id)}>
+              return (<ClickableName key={user.id} onClick={() => handleRecipientClick(user.id)}>
                 {user.name}
-              </li>)
+              </ClickableName>)
             }
           })}
         </ul>
-        <ConfigButton>
-          <FaCogs />
-        </ConfigButton>
       </MessageList>
       <ThreadContainer>
         <Thread userId={userId} receiverId={recipient} userList={userList} setUserList={setUserList} />

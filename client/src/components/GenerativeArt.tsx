@@ -12,7 +12,7 @@ const GenerativeArt = ( {roomId} ) => {
   const socket = useContext(SocketContext) as Socket;
   useEffect(() => {
     // Create p5 sketch
-    const sketch = (p) => {
+    const sketch = (p: any) => {
       let paths = [];
       let painting = false;
       let next = 0;
