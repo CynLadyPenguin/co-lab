@@ -7,7 +7,7 @@ import GenerativeArt from "./GenerativeArt";
 // import { PerspectiveCamera, PositionalAudio, Sphere, Plane, Box} from '@react-three/drei'
 import Peer, { MediaConnection } from 'peerjs';
 import p5 from 'p5';
-import {v4 as generatePeerId} from 'uuid';
+import { v4 as generatePeerId } from 'uuid';
 
 export const socket = io('/');
 export const SocketContext = createContext<Socket | null>(null)
@@ -18,23 +18,23 @@ const Sculpture = () => {
   const { user, isAuthenticated, isLoading } = useAuth0();
   const [peerId, setPeerId] = useState('')
   const { roomId } = useParams();
-  
+
   useEffect(() => {
     setPeerId(generatePeerId());
     const peer = new Peer(peerId as string, {
       host: '/',
       port: 8001,
     })
-  
+
     const myAudio = document.createElement('audio')
     myAudio.muted = true
-  
+
     navigator.mediaDevices.getUserMedia({
       video: false,
       audio: true
     }).then(stream => {
       addAudioStream(myAudio, stream);
-  
+
       peer.on('call', call => {
         call.answer(stream);
         const audio = document.createElement('audio')
@@ -42,12 +42,12 @@ const Sculpture = () => {
           addAudioStream(audio, userStream)
         })
       })
-  
+
       socket.on('userJoined', userId => {
         connectToNewUser(userId, stream)
       })
     })
-  
+
     function connectToNewUser(userId, stream) {
       const call = peer.call(userId, stream);
       const audio = document.createElement('audio')
@@ -59,7 +59,7 @@ const Sculpture = () => {
       })
       peers[userId] = call;
     }
-  
+
     function addAudioStream(audio, stream) {
       audio.srcObject = stream;
       audio.addEventListener('loadedmetadata', () => {

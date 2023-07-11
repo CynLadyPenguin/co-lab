@@ -14,17 +14,17 @@ import Navbar from './Navbar';
 // import Trimmer from './EarStuff/Trimmer'
 // import '../styles.css';
 
-const Home = lazy(() => import ('./Home'));
-const LoginButton = lazy(() => import ('./LoginButton'));
-const LogoutButton = lazy(() => import ('./LogoutButton'));
-const Profile = lazy(() => import ('./Profile/Profile'));
-const StoryBook = lazy(() => import ('./Stories'));
-const Ear = lazy(() => import ('./EarStuff/Instrument'));
-const Sculpture = lazy(() => import ('./Sculpture'));
-const VisualArt = lazy(() => import ('./Eye/VisualArt'));
-const Inbox = lazy(() => import ('./Messages/Inbox'));
-const Feed = lazy(() => import ('./Feed'));
-const Trimmer = lazy(() => import ('./EarStuff/Trimmer'));
+const Home = lazy(() => import('./Home'));
+const LoginButton = lazy(() => import('./LoginButton'));
+const LogoutButton = lazy(() => import('./LogoutButton'));
+const Profile = lazy(() => import('./Profile/Profile'));
+const StoryBook = lazy(() => import('./Stories'));
+const Ear = lazy(() => import('./EarStuff/Instrument'));
+const Sculpture = lazy(() => import('./Hand/Sculpture'));
+const VisualArt = lazy(() => import('./Eye/VisualArt'));
+const Inbox = lazy(() => import('./Messages/Inbox'));
+const Feed = lazy(() => import('./Feed'));
+const Trimmer = lazy(() => import('./EarStuff/Trimmer'));
 
 const App = () => {
   return (

@@ -13,12 +13,10 @@ const Home = () => {
 
   const generateRoomId = async (endpoint: any) => {
     try {
-      if (user) {
-        const response = await axios.post('/api/rooms', { userId: user.nickname });
-        const { userId, roomId } = response.data;
-        setRoomId(roomId);
-        navigate(`/${endpoint}/${roomId}`);
-      }
+      const { data } = await axios.post('/api/rooms');
+      const { roomId } = data;
+      setRoomId(roomId);
+      navigate(`/${endpoint}/${roomId}`);
     } catch (err) {
       console.error('Failed to generate room ID', err);
     }
@@ -73,12 +71,12 @@ const Home = () => {
       >
         <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/hand_z5epqn.png' alt="hand" />
       </div>
-        <div
-          className='image-link'
-          onClick={() => generateRoomId('stories')}
-          style={{ cursor: 'pointer' }}>
-          <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/mouth_lbo1al.png' alt="mouth" />
-        </div>
+      <div
+        className='image-link'
+        onClick={() => generateRoomId('stories')}
+        style={{ cursor: 'pointer' }}>
+        <img src='https://res.cloudinary.com/dtnq6yr17/image/upload/v1688069622/assets/mouth_lbo1al.png' alt="mouth" />
+      </div>
     </div>
   );
 }

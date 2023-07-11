@@ -9,7 +9,7 @@ const BodyContainer = styled.div`
   display: flex;
   justify-content: space-between;
   width: 80vw;
-  height: 80vh;
+  height: 75vh;
   margin: 0 auto;
 `;
 

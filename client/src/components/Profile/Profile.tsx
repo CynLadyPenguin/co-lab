@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth0, User } from '@auth0/auth0-react';
 import axios from 'axios';
 import ArtItem from './ArtItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faUserPlus, faUserMinus } from '@fortawesome/free-solid-svg-icons';
-import { SendButton } from '../../styled';
+import { faPencil, faUserPlus, faUserMinus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import styled from 'styled-components';
 
 interface Friend {
@@ -73,7 +72,6 @@ const Name = styled.div`
   text-align: center;
   font-size: 32px;
   margin-top: 20px;
-  // background-color: #F06b80;
   border-radius: 10px;
 `
 
@@ -87,19 +85,8 @@ const ProfilePic = styled.img`
   clip-path: circle();
 `;
 
-const AddFriend = styled.button`
-// style={{ width: '20%', margin: '5px', background: '#3d3983' }}
-  width: 20%;
-  color: #ffffff;
-  margin-top: 20px;
-  background-color: #F06b80;
-  border: 2px solid white;
-  border-radius: 20px;
-`
-
 const LeftContainer = styled.div`
   width: 20%;
-  // background-color: #F06b80;
   border-radius: 10px;
 `;
 
@@ -107,12 +94,11 @@ const RightContainer = styled.div`
   width: 60%;
   display: flex;
   flex-direction: column;
-  // background-color: #F06b80;
+  flex-wrap: wrap;
   border-radius: 10px;
 `;
 
 const UserInfoContainer = styled.div`
-  // margin-bottom: 75px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -123,55 +109,64 @@ const FriendContainer = styled.div`
   width: 20%;
   display: flex;
   flex-direction: column;
-  // background-color: #F06b80;
   border-radius: 10px;
 `;
 
 const FriendListContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  width: 100%;
-  margin-top: 10px;
-  // background-color: #F06b80;
-  border-radius: 10px;
-  padding-bottom: 10px;
-  justify-content: space-evenly;
-  justify-items: center;
-  align-content: space-evenly;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   align-items: center;
 `;
 
-const FriendLink = styled(Link)`
+const FriendLink = styled.a`
   display: flex;
-  width: 100%;
-  height: 100%;
+  width: 75px;
+  height: 75px;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+  text-decoration: none;
 `;
 
 const FriendImage = styled.img`
-  width: 75px;
-  height: 75px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center;
   clip-path: circle();
 `;
 
 const ArtworkContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   margin-top: 20px;
-  place-items: center;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+  max-height: ${({ containerHeight }) => `${containerHeight}px`};
 
-  @media (max-width: 1475px) {
-    grid-template-columns: repeat(2, 1fr);
+  &::-webkit-scrollbar {
+    display: none;
   }
+`;
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(1, 1fr);
-  }
+const Popup = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 3;
+`;
 
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
+const PopupImage = styled.img`
+  max-width: 90%;
+  max-height: 90%;
 `;
 
 const Profile: React.FC = () => {
@@ -182,6 +177,10 @@ const Profile: React.FC = () => {
   const [friendIds, setFriendIds] = useState<string[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [artwork, setArtwork] = useState<string[]>([]);
+  const artworkContainerRef = useRef<HTMLDivElement>(null);
+  const [artworkContainerHeight, setArtworkContainerHeight] = useState<number>(0);
+  const [selectedArtwork, setSelectedArtwork] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
 
   useEffect(() => {
     if (user) {
@@ -196,6 +195,26 @@ const Profile: React.FC = () => {
     }
   }, [friendIds]);
 
+  useEffect(() => {
+    calculateArtworkContainerHeight();
+    window.addEventListener('resize', calculateArtworkContainerHeight);
+
+    return () => {
+      window.removeEventListener('resize', calculateArtworkContainerHeight);
+    };
+  }, [artwork]);
+
+  const calculateArtworkContainerHeight = () => {
+    if (artworkContainerRef.current) {
+      const artworkItems = artworkContainerRef.current.children;
+      const artworkItemHeight = artworkItems.length ? (artworkItems[0] as HTMLElement).offsetHeight : 0;
+      const artworkContainerPadding = 40;
+      const maxRows = 2;
+      const containerHeight = artworkItemHeight * maxRows + artworkContainerPadding;
+      setArtworkContainerHeight(containerHeight);
+    }
+  };
+
   const getArtwork = async () => {
     try {
       const id = userId || user?.sub;
@@ -205,6 +224,24 @@ const Profile: React.FC = () => {
       console.error('Failed to GET artwork at client:', err);
     }
   };
+
+  const deleteArtwork = async (artworkId: string) => {
+    try {
+      await axios.delete(`/artwork/byId/${artworkId}`);
+      setArtwork(prevArtwork => prevArtwork.filter(art => art.id !== artworkId));
+    } catch (err) {
+      console.error('Failed to DELETE artwork at client:', err);
+    }
+  };
+
+  const getFullSizeImage = async (artworkId: string) => {
+    try {
+      const { data } = await axios.get(`/artwork/byId/originalImage/${artworkId}`);
+      setSelectedArtwork(data);
+    } catch (err) {
+      console.error('Failed to GET original image at client:', err);
+    }
+  }
 
   const getUserInfo = async () => {
     try {
@@ -263,6 +300,18 @@ const Profile: React.FC = () => {
     const fileInput = document.getElementById('fileInput');
     if (fileInput) {
       fileInput.click();
+    }
+  };
+
+  const handleArtworkClick = (artworkId: string, e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const target = e.target as HTMLElement;
+    const isTrashIconClicked = target.classList.contains('trash-icon');
+    if (isTrashIconClicked) {
+      deleteArtwork(artworkId);
+    } else {
+      getFullSizeImage(artworkId);
+      setShowPopup(true);
     }
   };
 
@@ -377,62 +426,57 @@ const Profile: React.FC = () => {
       </LeftContainer>
       <RightContainer>
         <div>
-          <Name>Artwork
-            <ArtworkContainer>
-              {artwork &&
-                artwork.slice(0, 7).map((art) => {
-                  if (art.type === 'visual art' || art.type === 'sculpture') {
-                    return (
-                      <ArtItem
-                        key={art.id}
-                        id={art.id}
-                        type={art.type}
-                        content={art.type === 'visual art' ? art.visualart?.content || '' : art.sculpture?.content || ''}
-                      />
-                    );
-                  }
-                  if (art.type === 'story') {
-                    return (
-                      <ArtItem
-                        key={art.id}
-                        id={art.id}
-                        type={art.type}
-                        content={art.story.coverImage}
-                      />
-                    )
-                  }
-                  return null;
-                })}
-            </ArtworkContainer>
-          </Name>
+          <Name>Artwork</Name>
+          <ArtworkContainer ref={artworkContainerRef} containerHeight={artworkContainerHeight}>
+            {artwork &&
+              artwork.map((art) => {
+                if (art.type) {
+                  return (
+                    <ArtItem
+                      key={art.id}
+                      id={art.id}
+                      type={art.type}
+                      content={art[art.type.replace(' ', '')]?.content || art[art.type]?.content || art[art.type]?.coverImage}
+                      onClick={handleArtworkClick}
+                      deleteArtwork={deleteArtwork}
+                    />
+                  );
+                }
+                return null;
+              })}
+          </ArtworkContainer>
         </div>
       </RightContainer>
       <FriendContainer>
-        <Name>Friends
-          <FriendListContainer>
-            {friends &&
-              friends.slice(0, 9).map((friend) => {
-                if (userId && friend.id === user?.sub) {
-                  return (
-                    <div key={friend.id}>
-                      <FriendLink to={'/profile'}>
-                        <FriendImage src={friend.picture} alt={friend.name} />
-                      </FriendLink>
-                    </div>
-                  )
-                } else {
-                  return (
-                    <div key={friend.id}>
-                      <FriendLink to={`/profile/${friend.id}`}>
-                        <FriendImage src={friend.picture} alt={friend.name} />
-                      </FriendLink>
-                    </div>
-                  )
-                }
-              })}
-          </FriendListContainer>
-        </Name>
+        <Name>Friends</Name>
+        <FriendListContainer>
+          {friends &&
+            friends.slice(0, 9).map((friend) => {
+              if (userId && friend.id === user?.sub) {
+                return (
+                  <div key={friend.id}>
+                    <FriendLink href={'/profile'}>
+                      <FriendImage src={friend.picture} alt={friend.name} />
+                    </FriendLink>
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={friend.id}>
+                    <FriendLink href={`/profile/${friend.id}`}>
+                      <FriendImage src={friend.picture} alt={friend.name} />
+                    </FriendLink>
+                  </div>
+                );
+              }
+            })}
+        </FriendListContainer>
       </FriendContainer>
+      {showPopup && (
+        <Popup onClick={() => setShowPopup(false)}>
+          <PopupImage src={selectedArtwork} alt="Full-size artwork" />
+        </Popup>
+      )}
     </ProfileContainer >
   ) : (
     <p>You are not logged in</p>

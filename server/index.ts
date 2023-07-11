@@ -87,7 +87,6 @@ app.post('/api/stories', async (req, res) => {
     const artwork = await Artwork.create({ type: 'story', userId });
     const { id: artworkId } = artwork.dataValues;
     const newStory = await Story.create({ artworkId, ...newStoryData });
-    console.log(newStory);
     res.status(201).json(newStory);
   } catch (error) {
     console.error(error);
@@ -129,10 +128,9 @@ sequelize.authenticate()
 initialize();
 
 Rooms.post('/', (req, res) => {
-  const { userId } = req.body;
   const roomId = generateRoomId();
 
-  res.json({ userId, roomId });
+  res.json({ roomId });
 })
 
 io.on('connection', socket => {

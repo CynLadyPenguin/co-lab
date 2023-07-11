@@ -46,6 +46,21 @@ html {
   margin: 50px;
 }
 
+.canvas-container {
+  background-color: #3d3983;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80vw;
+  /* Adjust the width as desired */
+  margin: 0 auto;
+  /* Center the container horizontally */
+  height: 75vh;
+  border-radius: 10px;
+  box-shadow: 5px 5px 13px #343171,
+    -5px -5px 13px #464195;
+}
+
 .profile-container {
   background-color: #3d3983;
   display: flex;
@@ -168,9 +183,11 @@ html {
   margin-top: 20px;
   margin-bottom: 20px;
   width: 600px;
-  background-color: #F5C968;
-  border: 4px solid #f06b80;
-  border-radius: 20px;
+  background-color: #3d3983;
+  border-radius: 10px;
+  background: #3d3983;
+  box-shadow: 5px 5px 13px #343171,
+    -5px -5px 13px #464195;
   padding: 20px;
 }
 
@@ -202,7 +219,10 @@ html {
 .cloud-img {
   width: 100%;
   height: auto;
-
+  border-radius: 10px;
+  background: #3d3983;
+  box-shadow: inset 50px 50px 81px #383479,
+    inset -50px -50px 81px #423e8d;
 }
 
 .page {

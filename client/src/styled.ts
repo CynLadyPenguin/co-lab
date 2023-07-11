@@ -5,10 +5,14 @@ const ConversationContainer = styled.div`
   flex-direction: column;
   flex-grow: 1;
   overflow-y: auto;
-  height: 100%;
+  height: 80%;
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow:  5px 5px 13px #343171,
+               -5px -5px 13px #464195;
   
   /* For WebKit browsers (ex. Chrome) */
   &::-webkit-scrollbar {

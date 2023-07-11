@@ -12,10 +12,18 @@ const SidebarContainer = styled.div`
   width: 100%;
 `;
 
+const Inbox = styled.h1`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+`;
+
 const MessageList = styled.div`
   flex: 1;
   width: 25%;
-  padding: 20px;
+
   ul {
     list-style: none;
     padding: 0;
@@ -43,7 +51,23 @@ const ConfigButton = styled.button`
 `;
 
 const ClickableName = styled.li`
+  display: flex;
+  align-items: center;
+  font-size: 20px;
   cursor: pointer;
+
+  strong {
+    font-weight: bold;
+    text-shadow: 7px 7px 5px #23224d;
+    filter: brightness(100%);
+  }
+`;
+
+const UserImage = styled.img`
+  width: 40px;
+  height: 40px;
+  clip-path: circle();
+  margin: 5px 10px 5px 65px;
 `;
 
 const Sidebar = () => {
@@ -56,8 +80,9 @@ const Sidebar = () => {
 
   const getUsers = async () => {
     try {
-      const response = await axios.get('/users');
-      setUserList(response.data);
+      const { data } = await axios.get('/users');
+      setUserList(data);
+      setRecipient(data[0].id);
     } catch (err) {
       console.error('Failed to GET user list:', err);
     }
@@ -80,13 +105,19 @@ const Sidebar = () => {
   return (
     <SidebarContainer>
       <MessageList>
-        <h1>Inbox</h1>
+        <Inbox>Inbox</Inbox>
         <ul>
           {userList.map((user) => {
             if (user.id !== userId) {
-              return (<ClickableName key={user.id} onClick={() => handleRecipientClick(user.id)}>
-                {user.name}
-              </ClickableName>)
+              return (
+                <ClickableName
+                  key={user.id}
+                  onClick={() => handleRecipientClick(user.id)}
+                >
+                  <UserImage src={user.picture} />
+                  {user.id === recipient ? <strong>{user.name}</strong> : user.name}
+                </ClickableName>
+              )
             }
           })}
         </ul>

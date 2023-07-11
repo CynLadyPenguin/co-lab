@@ -52,6 +52,7 @@ const Instrument = () => {
 
   useEffect(() => {
     const runDetection = () => {
+      if (video.current && video.current.videoWidth && video.current.videoHeight) {
       model.detect(video.current!).then((predictions: any[]) => {
         if (predictions.length !== 0) {
           const hand1 = predictions[0].bbox;
@@ -86,6 +87,7 @@ const Instrument = () => {
           }
         }
       });
+    }
     };
 
     const startVideo = async () => {
@@ -111,8 +113,28 @@ const Instrument = () => {
       model = lmodel;
     });
 
+    const cleanup = () => {
+      if (video.current) {
+        video.current.srcObject?.getTracks().forEach((track) => track.stop());
+      }
+
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+    };
+
+    window.addEventListener('beforeunload', cleanup);
+
     audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
     mediaStreamDestinationRef.current = audioContextRef.current.createMediaStreamDestination();
+    window.onbeforeunload = cleanup;
+
+    return () => {
+      if (video.current) {
+        video.current.srcObject?.getTracks().forEach((track) => track.stop());
+      }
+        window.onbeforeunload = null;
+    };
   }, []);
 
   const startRecording = () => {
