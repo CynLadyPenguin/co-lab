@@ -1,10 +1,23 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { Socket } from 'socket.io-client';
 import { SocketContext } from './Sculpture';
 import p5 from 'p5';
+import styled from 'styled-components';
 import { FaSave } from 'react-icons/fa';
+
+const SaveButton = styled.div`
+  position: absolute;
+  left: -78px;
+  bottom: 4px;
+  z-index: 2;
+  cursor: pointer;
+
+  &:hover {
+    color: #8b88b5;
+  }
+`
 
 const GenerativeArt = ({ roomId }) => {
   const { user, isAuthenticated, isLoading } = useAuth0();
@@ -21,8 +34,8 @@ const GenerativeArt = ({ roomId }) => {
 
       p.setup = () => {
         const container = document.querySelector('.canvas-container');
-        const canvasWidth = container?.clientWidth - 5;
-        const canvasHeight = container?.clientHeight - 5;
+        const canvasWidth = container?.clientWidth - 7;
+        const canvasHeight = container?.clientHeight - 7;
         p.createCanvas(canvasWidth, canvasHeight, p.WEBGL).parent(canvasRef.current);
         p.background(61, 57, 131); // Set background color to #3d3983
         current = p.createVector(0, 0, 0);
@@ -32,7 +45,6 @@ const GenerativeArt = ({ roomId }) => {
             if (data.painting) {
               current.x = data.x - p.width / 2
               current.y = data.y - p.height / 2
-              // current.z = p.random(-100, 100)
               let force = p5.Vector.sub(current, previous);
               force.mult(0.05);
 
@@ -42,7 +54,6 @@ const GenerativeArt = ({ roomId }) => {
 
               previous.x = current.x;
               previous.y = current.y;
-              // previous.z = current.z;
             }
           }
         });
@@ -53,7 +64,6 @@ const GenerativeArt = ({ roomId }) => {
         if (p.millis() > next && painting) {
           current.x = p.mouseX - p.width / 2;
           current.y = p.mouseY - p.height / 2;
-          // current.z = p.random(-100, 100);
 
           let force = p5.Vector.sub(current, previous);
           force.mult(0.05);
@@ -64,19 +74,14 @@ const GenerativeArt = ({ roomId }) => {
 
           previous.x = current.x;
           previous.y = current.y;
-          // previous.z = current.z;
 
           socket.emit('drawing', {
             x: p.mouseX,
             y: p.mouseY,
-            // z: p.mouseZ,
             painting,
             roomId
           })
         }
-
-        // p.orbitControl();
-        // p.translate(0, 0, -p.width / 2);
 
         for (let i = 0; i < paths.length; i++) {
           paths[i].update();
@@ -89,7 +94,6 @@ const GenerativeArt = ({ roomId }) => {
         painting = true;
         previous.x = p.mouseX - p.width / 2;
         previous.y = p.mouseY - p.height / 2;
-        // previous.z = p.random(-100, 100);
         paths.push(new Path());
       };
 
@@ -151,10 +155,8 @@ const GenerativeArt = ({ roomId }) => {
             p.line(
               this.position.x,
               this.position.y,
-              // this.position.z,
               other.position.x,
               other.position.y,
-              // other.position.z
             );
           }
         }
@@ -174,9 +176,6 @@ const GenerativeArt = ({ roomId }) => {
     try {
       if (canvas && user) {
         await axios.post('/sculpture', { canvas: canvas.toDataURL(), userId: user?.sub });
-        // const link = document.createElement('a');
-        // link.download = 'generative_art.png';
-        // link.click();
       }
     } catch (err) {
       console.error('Unable to POST artwork to DB at client', err);
@@ -187,18 +186,11 @@ const GenerativeArt = ({ roomId }) => {
     <div className='canvas-container' style={{ position: 'relative' }}>
       <div ref={canvasRef} style={{ position: 'relative', zIndex: '1' }}>
         {user &&
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '50px',
-              left: '-75px',
-              zIndex: '2',
-              cursor: 'pointer',
-            }}
+          <SaveButton
             onClick={handleSave}
           >
             <FaSave size={48} />
-          </div>
+          </SaveButton>
         }
       </div>
     </div>

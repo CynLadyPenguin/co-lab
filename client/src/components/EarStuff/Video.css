@@ -5,10 +5,14 @@
 }
 
 video {
+  display: flex;
+  border-radius: 5%;
+  padding: 1%;
   min-width: 100%;
   min-height: 100vh;
   object-fit: cover;
-  border: 10px solid purple;
+  box-shadow: 5px 5px 13px #343171,
+  -5px -5px 13px #464195;
 }
 
 
@@ -25,13 +29,16 @@ video {
 
 
 .video-wrapper {
+  display: flex;
   position: relative;
+  box-shadow: 5px 5px 13px #343171,
+  -5px -5px 13px #464195;
 }
 
 .blue-overlay {
   position: absolute;
-  top: 20%; /* Adjust this value as needed */
-  left: 84%;
+  top: 13%; /* Adjust this value as needed */
+  left: 80%;
   transform: translate(-50%, -50%);
   width: 200px; /* Adjust the width as needed */
   height: auto; /* Adjust the height as needed */
@@ -52,7 +59,7 @@ video {
 .gold-overlay {
   position: absolute;
   top: 13%; /* Adjust this value as needed */
-  left: 12%; /* Adjust this value as needed */
+  left: 10%; /* Adjust this value as needed */
   width: 200px; /* Adjust this value as needed */
   height: auto; /* Adjust this value as needed */
   z-index: 1;
@@ -70,8 +77,8 @@ video {
 
 .green-overlay {
   position: absolute;
-  top: 65%;
-  left: 12%; /* Adjust this value as needed */
+  top: 70%;
+  left: 10%; /* Adjust this value as needed */
   width: 200px; /* Adjust this value as needed */
   height: auto; /* Adjust this value as needed */
   z-index: 1;
@@ -90,8 +97,8 @@ video {
 
 .pink-overlay {
   position: absolute;
-  top: 73%; /* Adjust this value as needed */
-  left: 84%;
+  top: 70%; /* Adjust this value as needed */
+  left: 80%;
   transform: translate(-50%, -50%);
   width: 200px; /* Adjust the width as needed */
   height: auto; /* Adjust the height as needed */

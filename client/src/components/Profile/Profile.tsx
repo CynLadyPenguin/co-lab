@@ -4,7 +4,7 @@ import { useAuth0, User } from '@auth0/auth0-react';
 import axios from 'axios';
 import ArtItem from './ArtItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faUserPlus, faUserMinus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faUserPlus, faUserMinus } from '@fortawesome/free-solid-svg-icons';
 import styled from 'styled-components';
 
 interface Friend {
@@ -50,7 +50,7 @@ const PencilIcon = styled.div`
   background-color: #F06b80;
 `;
 
-const AddFriendIcon = styled.div`
+const FriendButton = styled.div`
   position: absolute;
   top: 95%;
   left: 75%;
@@ -172,6 +172,7 @@ const PopupImage = styled.img`
 const Profile: React.FC = () => {
   const { userId } = useParams();
   const { user, isAuthenticated, isLoading } = useAuth0();
+  const isOwnProfile = !userId || userId === user?.sub;
   const [profileUser, setProfileUser] = useState<User | undefined>(undefined);
   const [profilePic, setProfilePic] = useState<File | undefined>(undefined);
   const [friendIds, setFriendIds] = useState<string[]>([]);
@@ -190,9 +191,7 @@ const Profile: React.FC = () => {
   }, [user, userId]);
 
   useEffect(() => {
-    if (friendIds.length) {
-      getFriends();
-    }
+    getFriends();
   }, [friendIds]);
 
   useEffect(() => {
@@ -247,7 +246,7 @@ const Profile: React.FC = () => {
     try {
       let userData;
       let result;
-      if (!userId || userId === user?.sub) {
+      if (isOwnProfile) {
         result = await axios.get(`/users/${user?.sub}`);
         userData = result.data;
       } else {
@@ -271,28 +270,6 @@ const Profile: React.FC = () => {
       setFriends(friendData);
     } catch (err) {
       console.error('Failed to GET friend data at client:', err);
-    }
-  };
-
-  const addFriend = async (userId: string, friendId: string) => {
-    try {
-      await axios.post('/users/add-friend', {
-        userId,
-        friendId,
-      });
-    } catch (err) {
-      console.error('Failed to ADD FRIEND at client:', err);
-    }
-  };
-
-  const unfriend = async (userId: string, friendId: string) => {
-    try {
-      await axios.patch('/users/unfriend', {
-        userId,
-        friendId,
-      });
-    } catch (err) {
-      console.error('Failed to UNFRIEND at client:', err);
     }
   };
 
@@ -391,6 +368,41 @@ const Profile: React.FC = () => {
     }
   };
 
+  const updateFriendStatus = async (userId: string, friendId: string, action: 'add' | 'unfriend') => {
+    const endpoint = action === 'add' ? '/users/add-friend' : '/users/unfriend';
+    try {
+      await axios.patch(endpoint, {
+        userId,
+        friendId,
+      });
+      if (isOwnProfile) {
+        action === 'add' ?
+          setFriendIds(prevFriendIds => [...prevFriendIds, friendId])
+          :
+          setFriendIds(prevFriendIds => prevFriendIds.filter(id => id !== friendId))
+      } else {
+        action === 'add' ?
+          setFriendIds(prevFriendIds => [...prevFriendIds, userId])
+          :
+          setFriendIds(prevFriendIds => prevFriendIds.filter(id => id !== userId));
+      }
+    } catch (err) {
+      console.error(`Failed to UPDATE friend status (${action}) at client:`, err);
+    }
+  };
+
+  const renderAddOrUnfriendButton = () => {
+    const isFriend = friendIds.includes(user?.sub);
+    const action = !isFriend ? 'add' : 'unfriend';
+    const button = action === 'add' ? faUserPlus : faUserMinus;
+
+    return (
+      <FriendButton onClick={() => updateFriendStatus(user?.sub, profileUser.id, action)}>
+        <FontAwesomeIcon icon={button} size="lg" />
+      </FriendButton>
+    );
+  };
+
   if (isLoading) {
     return <div className="loading-container">Loading ...</div>;
   }
@@ -403,20 +415,13 @@ const Profile: React.FC = () => {
             <Name>{profileUser.name}</Name>
             <ProfilePicContainer>
               <ProfilePic src={profilePic || profileUser.picture} alt={profileUser.name} />
-              {!userId && <PencilIcon onClick={handlePicClick}>
+              {isOwnProfile && <PencilIcon onClick={handlePicClick}>
                 <FontAwesomeIcon icon={faPencil} size="lg" />
                 <input type="file" accept="image/*" id="fileInput" onChange={handlePicChange} style={{ display: 'none' }} />
               </PencilIcon>
               }
-              {userId && userId !== user?.sub && !friendIds.includes(user?.sub) && (
-                <AddFriendIcon onClick={() => { addFriend(user?.sub, profileUser.id) }}>
-                  <FontAwesomeIcon icon={faUserPlus} size="lg" />
-                </AddFriendIcon>
-              )}
-              {userId && userId !== user?.sub && friendIds.includes(user?.sub) && (
-                <AddFriendIcon onClick={() => { unfriend(user?.sub, profileUser.id) }}>
-                  <FontAwesomeIcon icon={faUserMinus} size="lg" />
-                </AddFriendIcon>
+              {!isOwnProfile && (
+                renderAddOrUnfriendButton()
               )}
             </ProfilePicContainer>
           </UserInfoContainer>
@@ -437,6 +442,7 @@ const Profile: React.FC = () => {
                       id={art.id}
                       type={art.type}
                       content={art[art.type.replace(' ', '')]?.content || art[art.type]?.content || art[art.type]?.coverImage}
+                      isOwnProfile={isOwnProfile}
                       onClick={handleArtworkClick}
                       deleteArtwork={deleteArtwork}
                     />

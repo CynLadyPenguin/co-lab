@@ -1,13 +1,13 @@
 import { Router } from 'express';
 const Ear = Router();
-import { Music, Artwork } from '../database/index.js'; // Replace with the path to your model file
+import { Music, Artwork } from '../database/index.js'; 
 
 
 
 // POST route for adding data to the music table
 Ear.post('/', async (req, res) => {
-  const { songTitle, content, url, userId } = req.body;
-  
+  const { songTitle, content, url, userId, albumCover } = req.body;
+
   try {
     const artwork = await Artwork.create({ type: 'music', userId });
     const { id: artworkId } = artwork.dataValues;
@@ -18,6 +18,7 @@ Ear.post('/', async (req, res) => {
       songTitle,
       content,
       url,
+      albumCover,
     });
 
     res.status(201).json(newMusic);
@@ -35,7 +36,6 @@ Ear.post('/', async (req, res) => {
 Ear.get('/', async (req, res) => {
   try {
     const mus = await Music.findAll();
-    console.log('got music', mus);
     res.json(mus);
   } catch (err) {
     console.error('Couldnt get music:', err)

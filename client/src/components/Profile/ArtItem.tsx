@@ -7,6 +7,7 @@ interface ArtItemProps {
   id: string;
   type: string;
   content: any;
+  isOwnProfile: boolean;
   onClick: (id: string, e: React.MouseEvent<HTMLDivElement>) => void;
   deleteArtwork: (id: string) => void;
 }
@@ -61,6 +62,7 @@ const ArtItem: React.FC<ArtItemProps> = ({
   id,
   type,
   content,
+  isOwnProfile,
   deleteArtwork,
   onClick
 }) => {
@@ -73,7 +75,6 @@ const ArtItem: React.FC<ArtItemProps> = ({
     deleteArtwork(id);
   };
 
-
   return (
     <>
       {!isDeleteClicked && (
@@ -83,7 +84,7 @@ const ArtItem: React.FC<ArtItemProps> = ({
           onClick={(e: React.MouseEvent<HTMLDivElement>) => onClick(id, e)}
         >
           <ArtImage src={content} alt={type} />
-          {isHovered && (
+          {isHovered && isOwnProfile && (
             <TrashIcon onClick={handleDelete}>
               <FontAwesomeIcon icon={faTrash} size="lg" />
             </TrashIcon>

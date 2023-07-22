@@ -55,19 +55,21 @@ const ClickableName = styled.li`
   align-items: center;
   font-size: 20px;
   cursor: pointer;
-
-  strong {
-    font-weight: bold;
-    text-shadow: 7px 7px 5px #23224d;
-    filter: brightness(100%);
-  }
 `;
 
-const UserImage = styled.img`
+const UserImage = styled.img<{ isSelected: boolean }>`
   width: 40px;
   height: 40px;
   clip-path: circle();
   margin: 5px 10px 5px 65px;
+  border: 4px solid transparent;
+  border-radius: 50%;
+
+  ${({ isSelected }) =>
+    isSelected &&
+    `
+    border-color: white;
+  `}
 `;
 
 const Sidebar = () => {
@@ -114,8 +116,10 @@ const Sidebar = () => {
                   key={user.id}
                   onClick={() => handleRecipientClick(user.id)}
                 >
-                  <UserImage src={user.picture} />
-                  {user.id === recipient ? <strong>{user.name}</strong> : user.name}
+                  <UserImage
+                    src={user.picture}
+                    isSelected={user.id === recipient} />
+                  {user.name}
                 </ClickableName>
               )
             }

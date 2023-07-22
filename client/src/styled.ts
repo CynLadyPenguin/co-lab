@@ -13,18 +13,38 @@ const ConversationContainer = styled.div`
   border-radius: 10px;
   box-shadow:  5px 5px 13px #343171,
                -5px -5px 13px #464195;
-  
-  /* For WebKit browsers (ex. Chrome) */
-  &::-webkit-scrollbar {
+
+  /* For WebKit browsers */
+    &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   &::-webkit-scrollbar-thumb {
-    background-color: transparent;
+    background-color: #f5c968;
+    border-radius: 12px;
+    border: 3px solid transparent;
+  }
+
+  /* For Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+
+  &::-moz-scrollbar {
+    width: 6px;
+  }
+
+  &::-moz-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-moz-scrollbar-thumb {
+    background-color: #f5c968;
+    border-radius: 12px;
+    border: 3px solid transparent;
   }
 `;
 

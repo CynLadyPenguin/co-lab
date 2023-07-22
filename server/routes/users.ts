@@ -33,7 +33,7 @@ Users.post('/', async (req, res) => {
   }
 });
 
-Users.post('/add-friend', async (req, res) => {
+Users.patch('/add-friend', async (req, res) => {
   try {
     const { userId, friendId } = req.body;
     const [user, friend] = await Promise.all([
@@ -48,9 +48,9 @@ Users.post('/add-friend', async (req, res) => {
     const { friends: userFriends } = user;
     const { friends: friendFriends } = friend;
 
-    if (userFriends.includes(friendId)) {
+    if (userFriends.includes(friendId) || friendFriends.includes(userId)) {
       console.error('Friendship already exists');
-      res.sendStatus(400);
+      return res.sendStatus(400);
     }
 
     await Promise.all([
@@ -58,7 +58,7 @@ Users.post('/add-friend', async (req, res) => {
       friend.update({ friends: [...friendFriends, userId] })
     ]);
 
-    res.sendStatus(201);
+    res.sendStatus(200);
   } catch (err) {
     console.error('Failed to ADD friend:', err);
     res.sendStatus(500);

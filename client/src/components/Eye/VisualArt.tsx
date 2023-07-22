@@ -1,7 +1,9 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import React, { useState, useEffect, createContext } from 'react';
 import Draw from './Sketch';
+import Modal from '../Modal';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import Peer, { MediaConnection } from 'peerjs';
 import { v4 as generatePeerId } from 'uuid';
@@ -15,6 +17,8 @@ const VisualArt: React.FC = () => {
   const { roomId } = useParams<string>();
   const [peerId, setPeerId] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('#3d3983');
+  const [friendList, setFriendList] = useState<Object[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setPeerId(generatePeerId());
@@ -90,15 +94,57 @@ const VisualArt: React.FC = () => {
     };
   }, []);
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   const handleBackgroundColorChange = (e: any) => {
     const { value } = e.target;
     setBackgroundColor(value);
+    socket.emit('changeBackgroundColor', { color: value, roomId });
   };
+
+  const openModal = async () => {
+    try {
+      setIsModalOpen(true);
+      await getFriends();
+    } catch (err) {
+      console.error('Failed to send invite at client:', err);
+    }
+  }
+
+  const getFriends = async () => {
+    try {
+      setIsModalOpen(true);
+      const { data } = await axios.get(`/users/${user?.sub}`);
+      const friends = await Promise.all(
+        data.friends.map(async (friendId: string) => {
+          const userObj = await axios.get(`/users/${friendId}`);
+          return { name: userObj.data.name, id: friendId };
+        }))
+      setFriendList(friends);
+    } catch (err) {
+      console.error('Failed to GET user friends at client:', err);
+    }
+  }
+
+  const sendInvite = async (senderId: string, receiverId: string, message: string) => {
+    socket.emit('directMessage', {
+      senderId,
+      receiverId,
+      message,
+    });
+  }
 
   return (
     <>
       <SocketContext.Provider value={socket}>
-        <Draw backgroundColor={backgroundColor} handleBackgroundColorChange={handleBackgroundColorChange} roomId={roomId} />
+        <Modal isOpen={isModalOpen} onClose={handleCloseModal} roomId={roomId} userId={user?.sub} friendList={friendList} sendInvite={sendInvite} />
+        <Draw backgroundColor={backgroundColor} setBackgroundColor={setBackgroundColor} handleBackgroundColorChange={handleBackgroundColorChange} openModal={openModal} roomId={roomId} />
       </SocketContext.Provider>
     </>
   )

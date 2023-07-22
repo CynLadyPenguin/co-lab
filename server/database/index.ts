@@ -115,6 +115,9 @@ const Music = sequelize.define('music', {
   songTitle: {
     type: DataTypes.STRING,
   },
+  albumCover: {
+    type: DataTypes.STRING,
+  },
   content: {
     type: DataTypes.TEXT,
     allowNull: true
@@ -215,10 +218,8 @@ Pages.belongsTo(Story, { foreignKey: 'storyId' })
 
 const initialize = async () => {
   try {
-    const seedStories = await Story.findAll();
-    if (seedStories.length === 0) {
-      await createSeedData();
-    }
+    // const seedStories = await Story.findAll();
+    // await createSeedData();
     await sequelize.sync({ alter: true });
     console.log('Tables successfully created!');
   } catch (error) {

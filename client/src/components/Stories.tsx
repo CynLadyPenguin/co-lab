@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useRef, createContext } from "react";
 import NewStoryForm from "./NewStoryForm";
 import FlipBook from "./FlipBook";
-import STT from  './STT';
-import TranscriptLog from "./Transcript";
+// import STT from  './STT';
+// import TranscriptLog from "./Transcript";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useParams } from 'react-router-dom'
 import { io, Socket } from 'socket.io-client';
-import { FaPlusCircle, FaTty, FaHeadphones, FaBookMedical, FaTrash } from 'react-icons/fa';
+import { FaTty, FaHeadphones, FaBookMedical, FaTrash } from 'react-icons/fa';
 import TooltipIcon from './TooltipIcons';
 import TTS from "./TTS";
+import axios from 'axios';
 import {v4 as generatePeerId} from 'uuid';
 import Peer, { MediaConnection } from 'peerjs';
 export const socket = io('/');
 export const SocketContext = createContext<Socket | null>(null);
+import '../styles.css';
 
 interface Page {
   id?: number;
@@ -26,6 +28,7 @@ interface Story {
   title: string;
   coverImage: string | null;
   numberOfPages: number | null;
+  originalCreatorId?: string;
 }
 
 export const TTSToggleContext = createContext<{
@@ -52,6 +55,7 @@ const StoryBook: React.FC = () => {
   const [ttsOn, setTtsOn] = useState(false);
   const [peerId, setPeerId] = useState('');
   const [muted, setMuted] = useState(true);
+  const [defaultStory, setDefaultStory] = useState(null);
 
   const userStream = useRef<MediaStream | null>(null);
   const peerConnections = useRef<Record<string, MediaConnection>>({});
@@ -220,9 +224,9 @@ const StoryBook: React.FC = () => {
   };
 
   //might need
-  const handleStoryLeave = () => {
-    setSpeakText('');
-  };
+  // const handleStoryLeave = () => {
+  //   setSpeakText('');
+  // };
 
   //create a new story should show the form
   //add the story to the list of stories
@@ -281,7 +285,12 @@ const StoryBook: React.FC = () => {
     }
   };
 
-  const deleteStory = async (storyId: number) => {
+  const deleteStory = async (storyId: number, originalCreatorId: string) => {
+    if (user?.sub !== originalCreatorId) {
+      console.error('Unauthorized deletion attempt');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/stories/${storyId}?userId=${user?.sub}`, {
         method: 'DELETE',
@@ -290,8 +299,6 @@ const StoryBook: React.FC = () => {
       if (response.ok) {
         // remove the deleted story from the list
         setStories(stories.filter(story => story.id !== storyId));
-      } else if (response.status === 403) {
-        console.error('Unauthorized deletion attempt');
       } else {
         console.error('Failed to delete story-client');
       }
@@ -300,23 +307,56 @@ const StoryBook: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchDefaultStory = async () => {
+      const res = await axios.get('/api/books?title=Instructions&userId=fakeId');
+      setDefaultStory(res.data);
+    };
+    fetchDefaultStory();
+  }, []);
+
+
   return (
     <TTSToggleContext.Provider value={{ ttsOn, setTtsOn }}>
-      <div style={{ display: 'flex', marginTop: '20px' }}>
-        {/* Column 1: Story List */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '20px' }}>
-          <div style={{ display: 'flex', marginBottom: '15px', marginTop: '20px' }}>
+      <div style={{ display: 'flex' }}>
+        {/* Column 2: FlipBook and PageEditor and NewStoryForm */}
+        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '20px', height: '100%', width: '100%' }}>
+          {showNewStoryForm ? (
+            <NewStoryForm onCreateStory={ handleCreateStory } onCancel={ handleCancelCreateStory } />
+          ) : (
+            selectedStory &&
+            <FlipBook
+              story={ selectedStory || defaultStory }
+              selectedStoryPages={ pages }
+              onUpdatePage={ handleUpdatePage }
+              fetchPages={ fetchPages }
+              TooltipIcon={ TooltipIcon }
+              addNewPage={ addNewPage }
+              roomId={ roomId }
+            />
+          )}
+        </div>
+         {/* Column 1: Story List */}
+         <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginRight: '20px',
+            boxShadow: '5px 5px 13px #343171, -5px -5px 13px #464195',
+          }}>
+          <div style={{ display: 'flex', marginBottom: '5px' }}>
             <TooltipIcon
               icon={ FaBookMedical }
               tooltipText="Create new story"
               handleClick={ handleShowNewStoryForm }
-              style={{ marginRight: '20px', marginLeft: '30px'}}
+              style={{ marginRight: '20px', marginTop: '30px'}}
             />
             <TooltipIcon
               icon={ FaTty }
               tooltipText={ttsOn ? "Turn TTS Off" : "Turn TTS On"}
               handleClick={() => setTtsOn(!ttsOn)}
-              style={{ marginRight: '20px' }}
+              style={{ marginRight: '20px', marginTop: '30px' }}
             >
               {ttsOn ? "Turn TTS Off" : "Turn TTS On"}
             </TooltipIcon>
@@ -324,18 +364,12 @@ const StoryBook: React.FC = () => {
               icon={ FaHeadphones }
               tooltipText={muted ? "Unmute" : "Mute"}
               handleClick={ handleToggleMute }
+              style={{ marginTop: '30px' }}
             />
           </div>
-          <div style={{
-            border: '1px solid #ccc',
-            borderRadius: '5px',
-            padding: '10px',
-            overflow: 'auto',
-            height: '680px',
-            width: '200px',
-            marginLeft: '30px',
-            marginTop: '40px'
-          }}>
+          <div className="story-list" style={{
+              marginTop: '40px',
+            }}>
             {stories.map((story, index) => (
               <div
                 key={ index }
@@ -348,7 +382,8 @@ const StoryBook: React.FC = () => {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  margin: '10px',
                 }}
               >
                 <div style={{
@@ -358,7 +393,7 @@ const StoryBook: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: story.coverImage ? 'transparent' : 'white'
+                  backgroundColor: story.coverImage ? 'transparent' : 'white',
                 }}>
                   {story.coverImage ? (
                     <img
@@ -370,7 +405,6 @@ const StoryBook: React.FC = () => {
                         objectFit: 'cover'
                       }}
                     />
-                    
                   ) : (
                     <div style={{ fontSize: '0.8em', color: 'black', textAlign: 'center' }}>
                       No Image
@@ -380,39 +414,24 @@ const StoryBook: React.FC = () => {
                 <div style={{ fontSize: '0.8em', color: 'white', textAlign: 'center' }}>
                   {story.title}
                 </div>
-                <TooltipIcon
-                  icon={() => <FaTrash size={20} color="white" />}
-                  tooltipText="Delete story"
-                  handleClick={() => {
-                    if (window.confirm("Are you sure you want to delete this story?")) {
-                      deleteStory(story.id!);
-                      console.log('story deleted');
-                    }
-                  }}
-                  style={{
-                    marginTop: '7px'
-                  }}
-                />
+                {story.originalCreatorId === user?.sub && (
+                  <TooltipIcon
+                    icon={() => <FaTrash size={20} color="white" />}
+                    tooltipText="Delete story"
+                    handleClick={() => {
+                      if (window.confirm("Are you sure you want to delete this story?")) {
+                        deleteStory(story.id!, story.originalCreatorId!);
+                        console.log('story deleted');
+                      }
+                    }}
+                    style={{
+                      marginTop: '7px'
+                    }}
+                  />
+                )}
               </div>
             ))}
           </div>
-        </div>
-        {/* Column 2: FlipBook and PageEditor and NewStoryForm */}
-        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '20px', height: '100%', width: '100%' }}>
-          {showNewStoryForm ? (
-            <NewStoryForm onCreateStory={ handleCreateStory } onCancel={ handleCancelCreateStory } />
-          ) : (
-            selectedStory &&
-            <FlipBook
-              story={ selectedStory }
-              selectedStoryPages={ pages }
-              onUpdatePage={ handleUpdatePage }
-              fetchPages={ fetchPages }
-              TooltipIcon={ TooltipIcon }
-              addNewPage={ addNewPage }
-              roomId={ roomId }
-            />
-          )}
         </div>
       </div>
       {/* TTS */}

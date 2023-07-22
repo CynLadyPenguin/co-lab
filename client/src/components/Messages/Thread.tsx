@@ -2,12 +2,14 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import TTS from '../TTS';
 import STT from '../STT';
+import { formatDistanceToNow } from 'date-fns';
 import TooltipIcon from '../TooltipIcons';
 import { FaVolumeUp } from 'react-icons/fa';
 import { Socket } from 'socket.io-client';
 import { SocketContext } from './Inbox';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane } from '@fortawesome/free-regular-svg-icons';
+import styled from 'styled-components';
 import {
   ConversationContainer,
   BubbleContainer,
@@ -30,6 +32,23 @@ interface Message {
     name: string;
   }
 }
+
+const TimestampSender = styled.div`
+  align-self: flex-end;
+  text-align: right;
+  margin-left: auto;
+  font-size: 12px;
+`;
+
+const TimestampRecipient = styled.div`
+  align-self: flex-start;
+  margin-right: auto;
+  font-size: 12px;
+`;
+
+const InviteLink = styled.a`
+  color: inherit;
+`;
 
 const Thread = ({ userId, receiverId, userList, setUserList }) => {
   const socket = useContext(SocketContext) as Socket;
@@ -81,6 +100,11 @@ const Thread = ({ userId, receiverId, userList, setUserList }) => {
     }
   };
 
+  const formatTimeDifference = (createdAt: string): string => {
+    const created = new Date(createdAt);
+    return formatDistanceToNow(created, { addSuffix: true });
+  };
+
   useEffect(() => {
     socket.on('messageReceived', (newMessage) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -117,16 +141,30 @@ const Thread = ({ userId, receiverId, userList, setUserList }) => {
           <div key={msg.id}>
             <BubbleContainer>
               {msg.senderId === userId ? (
-                <SenderBubble>{msg.message}</SenderBubble>
+                <TimestampSender>
+                  <SenderBubble>
+                    {msg.message.includes('http://co-lab.group/') ?
+                      <InviteLink href={msg.message}>Let's collab!</InviteLink>
+                      : msg.message}
+                  </SenderBubble>
+                  {formatTimeDifference(msg.createdAt)}
+                </TimestampSender>
               ) : (
-                <RecipientBubble>{msg.message}</RecipientBubble>
+                <TimestampRecipient>
+                  <RecipientBubble>
+                    {msg.message.includes('http://co-lab.group/') ?
+                      <InviteLink href={msg.message}>Let's collab!</InviteLink>
+                      : msg.message}
+                  </RecipientBubble>
+                  {formatTimeDifference(msg.createdAt)}
+                </TimestampRecipient>
               )}
-              <TooltipIcon
+              {/* <TooltipIcon
                 icon={FaVolumeUp}
                 tooltipText="TTY"
                 handleClick={() => { handleSpeakClick(msg.message) }}
                 style={{ top: '15px' }}
-              />
+              /> */}
             </BubbleContainer>
           </div>
         ))}

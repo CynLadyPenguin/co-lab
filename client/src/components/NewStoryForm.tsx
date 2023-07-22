@@ -3,6 +3,7 @@ import TTS from './TTS';
 import '../styles.css';
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
+import Dropzone from './DropZone';
 
 interface Page {
   id?: number;
@@ -24,7 +25,7 @@ interface NewStoryFormProps {
   onCancel: () => void;
 }
 
-const NewStoryForm: React.FC<{ onCreateStory: (story: Story) => void, onCancel: () => void }> = ({ onCreateStory, onCancel }) => {
+const NewStoryForm: React.FC<NewStoryFormProps> = ({ onCreateStory, onCancel }) => {
   const [title, setTitle] = useState('');
   // const [collaborators, setCollaborators] = useState('');
   const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -137,17 +138,7 @@ const NewStoryForm: React.FC<{ onCreateStory: (story: Story) => void, onCancel: 
         <label htmlFor="collaborators">Collaborators:</label>
         <input type="text" id="collaborators" value={ collaborators } onChange={ handleCollaboratorsChange } />
       </div> */}
-      <div>
-        <label htmlFor="coverImage">Cover Image:</label>
-        <input
-          placeholder='coverImage'
-          type="file"
-          id="coverImage"
-          accept="image/*"
-          onChange={ handleCoverImageChange }
-          onMouseEnter={() => handleHover('Cover Image')}
-          onMouseLeave={() => handleLeave()} />
-      </div>
+      <Dropzone onImageUpload={ setCoverImageUrl } />
       <button
         type="submit"
         onMouseEnter={() => handleHover('Create Story')}
@@ -155,6 +146,7 @@ const NewStoryForm: React.FC<{ onCreateStory: (story: Story) => void, onCancel: 
         Create Story
       </button>
       <button
+        style={{ marginTop: '20px'}}
         type="button"
         onClick={ handleCancel }
         onMouseEnter={() => handleHover('Cancel')}

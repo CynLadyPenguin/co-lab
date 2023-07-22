@@ -3,13 +3,13 @@ import React, { useState, useEffect, createContext } from "react";
 import { useParams } from 'react-router-dom'
 import { io, Socket } from 'socket.io-client';
 import GenerativeArt from "./GenerativeArt";
-// import { Canvas } from '@react-three/fiber';
-// import { PerspectiveCamera, PositionalAudio, Sphere, Plane, Box} from '@react-three/drei'
 import Peer, { MediaConnection } from 'peerjs';
+import {v4 as generatePeerId} from 'uuid';
 import p5 from 'p5';
-import { v4 as generatePeerId } from 'uuid';
 
-export const socket = io('/');
+export const socket = io('/', {
+  withCredentials: true
+});
 export const SocketContext = createContext<Socket | null>(null)
 
 const peers = {};
@@ -86,18 +86,8 @@ const Sculpture = () => {
       }
     })
 
-    // // Emit key press event
-    // const handleKeyPress = (event: KeyboardEvent) => {
-    //   const { key } = event;
-    //   socket.emit('keyPress', key, roomId);
-    // };
-
-    // Add event listeners
-    // window.addEventListener('keypress', handleKeyPress);
-
     // Clean up event listeners
     return () => {
-      // window.removeEventListener('keypress', handleKeyPress);
       socket.emit('disconnectUser', peerId, roomId);
       socket.disconnect();
       peer.disconnect();
